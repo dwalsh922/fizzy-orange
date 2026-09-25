@@ -40,6 +40,8 @@
   --mono:"DM Mono",ui-monospace,monospace;
   --W:min(max(100vw,177.78vh),calc(1.12*min(100vw,177.78vh)));  /* fills the screen, cropping at most 12 percent */
   --H:calc(var(--W)*.5625);
+  --FY:50%;                            /* the video frame's vertical centre */
+  --navh:72px;
   --lane:calc(50vw - .215*var(--W) - clamp(20px,4vw,64px) - 12px);
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -81,12 +83,12 @@ a{color:inherit}
 /* ---------- hero: scrub ---------- */
 .hero-scrub{position:relative;height:850vh;background:var(--paper)}
 .stage{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--paper)}
-.frame{position:absolute;left:50%;top:50%;width:var(--W);height:var(--H);transform:translate(-50%,-50%)}
+.frame{position:absolute;left:50%;top:var(--FY);width:var(--W);height:var(--H);transform:translate(-50%,-50%)}
 .frame .poster,.frame video,.frame .ending{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}
 /* the surround: paper, then peel, feathered over the frame's edges so the video itself never needs a mask */
 .surround{position:absolute;inset:0;pointer-events:none;background:var(--paper);
-  -webkit-mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(50% - var(--H)/2),transparent calc(50% - var(--H)*.455),transparent calc(50% + var(--H)*.455),#000 calc(50% + var(--H)/2));
-  mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(50% - var(--H)/2),transparent calc(50% - var(--H)*.455),transparent calc(50% + var(--H)*.455),#000 calc(50% + var(--H)/2));
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(var(--FY) - var(--H)/2),transparent calc(var(--FY) - var(--H)*.455),transparent calc(var(--FY) + var(--H)*.455),#000 calc(var(--FY) + var(--H)/2));
+  mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(var(--FY) - var(--H)/2),transparent calc(var(--FY) - var(--H)*.455),transparent calc(var(--FY) + var(--H)*.455),#000 calc(var(--FY) + var(--H)/2));
   -webkit-mask-composite:source-over;mask-composite:add}
 .surround .peelbg{position:absolute;inset:0;background:var(--peel) url("assets/peel.webp") center/cover;opacity:0;will-change:opacity}
 .frame .poster,.frame .ending{opacity:0;transition:opacity .6s var(--ease-soft)}
@@ -154,9 +156,43 @@ body.hero-on .env,body.hero-on .fizz i{animation-play-state:paused}
 .hero-static .btns .btn{padding:.8em .6em;font-size:.95rem}
 .hero-static::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;background:var(--peel) url("assets/peel.webp") center/cover;border-top:3px solid var(--ink)}
 
-@media (max-width:720px),(orientation:portrait) and (max-width:1024px),(orientation:portrait) and (pointer:coarse),(orientation:landscape) and (pointer:coarse) and (max-height:560px),(prefers-reduced-motion:reduce){
+/* the still hero: reduced motion, phones held sideways, and data-saver or very slow connections */
+@media (orientation:landscape) and (pointer:coarse) and (max-height:560px),(prefers-reduced-motion:reduce){
   .hero-scrub{display:none}
   .hero-static{display:flex}
+}
+.force-static .hero-scrub{display:none}
+.force-static .hero-static{display:flex}
+
+/* phones and portrait tablets: the tall cut, framed under the menu bar, with the boxes along the bottom */
+@media (max-width:720px),(orientation:portrait) and (max-width:1024px),(orientation:portrait) and (pointer:coarse){
+  :root{--W:min(100vw,calc((100svh - var(--navh) - 110px)*.75));--H:calc(var(--W)*1.3333);--FY:calc(var(--navh) + var(--H)/2)}
+  .hero-scrub{height:700svh}
+  .stage{height:100svh}
+  .dropper{left:.93%;top:15.28%;width:98.1%}
+  .ring{left:auto;right:14px;bottom:auto;top:calc(var(--navh) + 12px);margin:0;width:32px;height:32px}
+  .band,.band.left,.band.right{left:12px;right:12px;top:auto;bottom:max(12px,env(safe-area-inset-bottom));width:auto;transform:none}
+  .chip{padding:13px 16px;border-radius:16px;box-shadow:4px 4px 0 var(--ink)}
+  .kicker{font-size:.68rem;margin-bottom:.4em}
+  .band h2{font-size:1.5rem}
+  .band p.line{font-size:.93rem;margin-top:.35em}
+  .chip-cta{margin-top:10px}
+  .chip-cta .btn{font-size:.9rem;padding:.6em .95em}
+  .chip.release{display:grid;grid-template-columns:auto 1fr;gap:0 14px;align-items:center}
+  .chip.release .cover{width:66px;margin:0}
+  .chip.release .chip-cta{grid-column:1/-1}
+  .outlet{padding:5px 0}
+  .outlet .brand{font-size:1.2rem}
+  .outlet .what{font-size:.72rem;margin-top:2px}
+  .band.settle{inset:0}
+  .settle .s-left,.settle .s-right{top:auto;transform:none;left:12px;right:12px;width:auto}
+  .settle .s-right{bottom:max(12px,env(safe-area-inset-bottom))}
+  .settle .s-left{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 116px)}
+  .settle .s-left .logo{max-width:180px}
+  .settle .s-left .chip{display:none}
+  .settle .btns{grid-template-columns:1fr 1fr;gap:8px}
+  .settle .btns .btn{padding:.7em .8em;font-size:.88rem;justify-content:center}
+  .settle .btns .btn span{display:none}
 }
 
 /* ---------- below the hero ---------- */
@@ -652,8 +688,12 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   const BAND_EMAIL = 'babylonire@gmail.com';
 
   /* ================= the scroll hero ================= */
-  const VIDEO_URL = 'assets/hero-scrub.mp4';
-  const VIDEO_BYTES = 19564161;          // the encoded file's real size, used when Content-Length is missing
+  // two cuts of the same footage: wide for computers, tall for phones and portrait tablets
+  // (bytes are the real file sizes, used when Content-Length is missing)
+  const HERO = {
+    desk: { video: 'assets/hero-scrub.mp4', bytes: 19564161, poster: 'assets/hero-poster.jpg', ending: 'assets/hero-ending.jpg' },
+    mob: { video: 'assets/hero-scrub-m.mp4', bytes: 7673565, poster: 'assets/hero-poster-m.jpg', ending: 'assets/hero-ending-m.jpg' }
+  };
   const PEEL_IN = [0.31, 0.39];          // where the footage's backdrop turns from paper to peel
   const heroSec = document.querySelector('.hero-scrub');
   const stage = document.getElementById('stage');
@@ -773,7 +813,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   let target = 0, shown = 0, rafId = null, lastTick = 0, heroOnScreen = true;
   function tick(now){
     const dt = Math.min(100, now - (lastTick || now)); lastTick = now;
-    const k = 0.16;
+    const k = loadedMode === 'mob' ? 0.32 : 0.16;   // touch scrolling already glides, so phones get lighter easing
     shown += (target - shown) * (1 - Math.pow(1 - k, dt / 16.667));
     let busy = Math.abs(target - shown) >= 0.0005;
     if (!busy) shown = target;
@@ -792,15 +832,14 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   // the drop, then the hand-over to the footage
   function landed(){ stage.classList.add('landed'); kick(); }
 
-  // blob loader with an honest ring
-  let started = false;
-  function startBlobFetch(){ if (started) return; started = true; loadHeroBlob().catch(failVideo); }
-  async function loadHeroBlob(){
-    const ctrl = new AbortController();
+  // blob loader with an honest ring; one load per cut, and a rotation that changes the cut swaps it
+  let loadedMode = null, heroCtrl = null, blobUrl = null, loadToken = 0;
+  async function loadHeroBlob(cut, token){
+    const ctrl = heroCtrl = new AbortController();
     let watchdog = setTimeout(() => ctrl.abort(), 20000);
-    const res = await fetch(VIDEO_URL, { priority: 'low', signal: ctrl.signal });
+    const res = await fetch(cut.video, { priority: 'low', signal: ctrl.signal });
     if (!res.ok || !res.body) throw new Error('video');
-    const total = Number(res.headers.get('Content-Length')) || VIDEO_BYTES;
+    const total = Number(res.headers.get('Content-Length')) || cut.bytes;
     const reader = res.body.getReader();
     const chunks = []; let got = 0, lastRing = 0;
     for (;;) {
@@ -812,42 +851,66 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
       if (now - lastRing > 100 || frac === 1) { lastRing = now; ring.style.setProperty('--ld', Math.round(126 * (1 - frac))); }
     }
     clearTimeout(watchdog);
+    if (token !== loadToken) return;               // the cut changed while this one was loading
     ring.style.setProperty('--ld', 0);
-    video.src = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    video.src = blobUrl;
     video.load();
     video.addEventListener('canplay', () => {
-      requestSeek(heroProgress() * video.duration);
+      if (token !== loadToken) return;
+      // phones (iPhones especially) only paint seeked frames once the video has played for a moment
+      const settle = () => { lastFrame = -1; seekBusy = false; pendingTime = null; requestSeek(heroProgress() * video.duration); };
+      const pr = video.play();
+      if (pr && pr.then) pr.then(() => { video.pause(); settle(); }).catch(settle); else { video.pause(); settle(); }
       const reveal = () => stage.classList.add('video-ready');
       stage.classList.contains('landed') ? reveal() : setTimeout(reveal, 1500);
     }, { once: true });
   }
   function failVideo(){ stage.classList.add('video-failed'); }
 
-  let heroInit = false;
-  function initHeroOnce(){
-    if (heroInit) return; heroInit = true;
-    posterEl.style.backgroundImage = "url('assets/hero-poster.jpg')";
-    endingEl.style.backgroundImage = "url('assets/hero-ending.jpg')";
+  function initHero(mode){
+    if (loadedMode === mode) return;
+    const first = loadedMode === null;
+    loadedMode = mode;
+    const cut = HERO[mode], token = ++loadToken;
+    if (heroCtrl) heroCtrl.abort();
+    stage.classList.remove('video-ready', 'video-failed');
+    ring.style.setProperty('--ld', 126);
+    posterEl.style.backgroundImage = `url('${cut.poster}')`;
+    endingEl.style.backgroundImage = `url('${cut.ending}')`;
+    let started = false;
+    const start = () => { if (started || token !== loadToken) return; started = true; loadHeroBlob(cut, token).catch(() => { if (token === loadToken) failVideo(); }); };   // a stale cut's abort is not a failure
     const img = new Image();
-    img.onload = img.onerror = startBlobFetch;
-    img.src = 'assets/hero-poster.jpg';
-    setTimeout(startBlobFetch, 4000);
-    const dropper = stage.querySelector('.dropper');
-    dropper.addEventListener('animationend', landed, { once: true });
-    setTimeout(() => { if (!stage.classList.contains('landed')) landed(); }, 2200);
+    img.onload = img.onerror = start;
+    img.src = cut.poster;
+    setTimeout(start, 4000);
+    if (first) {
+      const dropper = stage.querySelector('.dropper');
+      dropper.addEventListener('animationend', landed, { once: true });
+      setTimeout(() => { if (!stage.classList.contains('landed')) landed(); }, 2200);
+    }
   }
 
-  const GATES = [
-    '(max-width: 720px)',
-    '(orientation: portrait) and (max-width: 1024px)',
-    '(orientation: portrait) and (pointer: coarse)',
-    '(orientation: landscape) and (pointer: coarse) and (max-height: 560px)',
-    '(prefers-reduced-motion: reduce)'
-  ];
+  // which hero a visitor gets: the still version only for reduced motion, phones held sideways,
+  // and data-saver or very slow connections; phones and portrait tablets get the tall cut
+  const conn = navigator.connection;
+  if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) document.documentElement.classList.add('force-static');
+  const STATIC_Q = ['(prefers-reduced-motion: reduce)', '(orientation: landscape) and (pointer: coarse) and (max-height: 560px)'];
+  const MOB_Q = ['(max-width: 720px)', '(orientation: portrait) and (max-width: 1024px)', '(orientation: portrait) and (pointer: coarse)'];
+  function heroMode(){
+    if (document.documentElement.classList.contains('force-static') || STATIC_Q.some(q => matchMedia(q).matches)) return 'static';
+    return MOB_Q.some(q => matchMedia(q).matches) ? 'mob' : 'desk';
+  }
+  const nav = document.querySelector('.nav');
+  function measureNav(){ document.documentElement.style.setProperty('--navh', nav.offsetHeight + 'px'); }
+  measureNav(); addEventListener('resize', measureNav);
+
   let scrubOn = false;
-  function enableScrub(){
-    if (scrubOn) return; scrubOn = true;
-    initHeroOnce();
+  function enableScrub(mode){
+    if (scrubOn) { initHero(mode); return; }
+    scrubOn = true;
+    initHero(mode);
     measureHero();
     addEventListener('scroll', onScroll, { passive: true });
     bands.forEach(b => { b.op = -1; b.k = -1; b.vis = null; });
@@ -863,8 +926,11 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     removeEventListener('scroll', onScroll);
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
   }
-  function applyHeroMode(){ GATES.some(q => matchMedia(q).matches) ? disableScrub() : enableScrub(); }
-  const MQLS = GATES.map(q => matchMedia(q));
+  function applyHeroMode(){
+    const m = heroMode();
+    if (m === 'static') disableScrub(); else { enableScrub(m); measureHero(); onScroll(); }
+  }
+  const MQLS = [...STATIC_Q, ...MOB_Q].map(q => matchMedia(q));   // kept referenced so their listeners survive
   MQLS.forEach(m => m.addEventListener('change', applyHeroMode));
 
   /* ================= the peel ribbon ================= */
