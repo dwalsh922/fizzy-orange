@@ -653,7 +653,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
   /* ================= the scroll hero ================= */
   const VIDEO_URL = 'assets/hero-scrub.mp4';
-  const VIDEO_BYTES = 11813290;          // the encoded file's real size, used when Content-Length is missing
+  const VIDEO_BYTES = 19564161;          // the encoded file's real size, used when Content-Length is missing
   const PEEL_IN = [0.31, 0.39];          // where the footage's backdrop turns from paper to peel
   const heroSec = document.querySelector('.hero-scrub');
   const stage = document.getElementById('stage');
@@ -752,12 +752,16 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   }
 
   // seek gating
-  let seekBusy = false, pendingTime = null, lastSeekT = -1;
+  // the footage is drawn at 15 frames a second, cartoon style: snap every seek to the middle
+  // of a whole frame, and skip it entirely when that frame is already on screen
+  const FPS = 15;
+  let seekBusy = false, pendingTime = null, lastFrame = -1;
   function requestSeek(t){
     if (!video.duration) return;
     if (seekBusy) { pendingTime = t; return; }
-    if (Math.abs(t - lastSeekT) < 1 / 90) return;   // already showing this frame
-    seekBusy = true; lastSeekT = t; video.currentTime = t;
+    const frame = Math.min(Math.floor(t * FPS), Math.floor(video.duration * FPS) - 1);
+    if (frame === lastFrame) return;
+    seekBusy = true; lastFrame = frame; video.currentTime = (frame + 0.5) / FPS;
   }
   video.addEventListener('seeked', () => {
     seekBusy = false;
