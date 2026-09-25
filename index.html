@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fizzy Orange | Dublin City Soul</title>
+<meta name="description" content="Fizzy Orange are a six-piece soul band from Dublin city. Gigs and tickets, the In Mono EP, the mailing list and bookings.">
+<meta name="theme-color" content="#EE6605">
+<!-- DEPLOY STEP: both og URLs point at the live address; update them if the address changes -->
+<meta property="og:title" content="Fizzy Orange | Dublin City Soul">
+<meta property="og:description" content="A six-piece soul band from Dublin city. Freshly squeezed, best served loud.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fizzy-orange.pages.dev/">
+<meta property="og:image" content="https://fizzy-orange.pages.dev/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://fizzy-orange.pages.dev/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='36' r='24' fill='%23EE6605' stroke='%231F1A18' stroke-width='4'/%3E%3Cpath d='M32 12c2-6 10-9 18-6-3 7-11 9-18 6z' fill='%235F9A4B' stroke='%231F1A18' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=DM+Mono:wght@400;500&family=Shrikhand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDEBDD;        /* the footage's own paper backdrop */
+  --panel:#FBF8F0;
+  --peel:#EE6605;         /* the average of the peel texture */
+  --accent:#F07A2A;       /* the four action buttons */
+  --accent-hover:#F79450;
+  --accent-muted:rgba(240,122,42,.22);
+  --leaf:#5F9A4B;
+  --pith:#F8EBD3;
+  --text-primary:#1F1A18; /* the logo's ink */
+  --text-secondary:#4A403A;
+  --ink:#1F1A18;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-soft:cubic-bezier(.45,0,.2,1);
+  --display:"Shrikhand",Georgia,serif;
+  --body:"Archivo",system-ui,sans-serif;
+  --mono:"DM Mono",ui-monospace,monospace;
+  --W:min(max(100vw,177.78vh),calc(1.12*min(100vw,177.78vh)));  /* fills the screen, cropping at most 12 percent */
+  --H:calc(var(--W)*.5625);
+  --lane:calc(50vw - .215*var(--W) - clamp(20px,4vw,64px) - 12px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body,section,nav,footer,header,main{max-width:100vw;overflow-x:hidden;overflow-x:clip}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--peel);color:var(--text-primary);font-family:var(--body);font-size:1.0625rem;line-height:1.55;animation:pagein .9s var(--ease-out) both}
+@keyframes pagein{from{opacity:0}to{opacity:1}}
+img{max-width:100%;height:auto;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px;box-shadow:0 0 0 7px var(--paper);border-radius:6px}
+.skip{position:fixed;left:12px;top:-60px;z-index:100;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:15px;text-decoration:none;transition:top .3s var(--ease-out)}
+.skip:focus{top:12px}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- the environment: one fixed peel layer behind everything ---------- */
+.env{position:fixed;inset:-4%;z-index:-2;background:var(--peel) url("assets/peel.webp") center/cover;animation:drift 90s var(--ease-soft) infinite alternate;animation-delay:-20s;will-change:transform}
+@keyframes drift{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.08) translate(-1.2%,1.5%)}}
+.fizz{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.fizz i{position:absolute;bottom:-40px;width:var(--s,10px);height:var(--s,10px);border-radius:50%;border:2px solid rgba(248,235,211,.55);animation:rise var(--d,22s) linear infinite;animation-delay:var(--dl,-4s);opacity:.5}
+@keyframes rise{from{transform:translateY(0)}to{transform:translateY(-115vh)}}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;font:800 1rem/1.1 var(--body);letter-spacing:.01em;text-decoration:none;color:var(--ink);background:var(--accent);border:3px solid var(--ink);border-radius:15px;padding:.85em 1.25em;box-shadow:4px 4px 0 var(--ink);cursor:pointer;transition:transform .25s var(--ease-out),box-shadow .25s var(--ease-out),background-color .25s var(--ease-out)}
+.btn:hover{background:var(--accent-hover);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:var(--panel)}
+.btn.ghost:hover{background:#fff}
+@media (pointer:coarse){.btn{min-height:44px}}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px clamp(16px,3vw,40px);background:var(--paper);border-bottom:3px solid var(--ink)}
+.nav .brand{display:block;width:clamp(86px,9vw,120px)}
+.nav ul{display:flex;gap:clamp(4px,1.4vw,22px);list-style:none;margin:0;padding:0}
+.nav a.link{font:500 .82rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:10px 8px;border-radius:15px;display:inline-flex;align-items:center;min-height:40px;transition:background-color .25s var(--ease-out)}
+.nav a.link:hover{background:var(--accent-muted)}
+.nav .short{display:none}
+@media (max-width:560px){.nav .long{display:none}.nav .short{display:inline}.nav a.link{font-size:.74rem;padding:8px 6px}}
+
+/* ---------- hero: scrub ---------- */
+.hero-scrub{position:relative;height:850vh;background:var(--paper)}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--paper)}
+.frame{position:absolute;left:50%;top:50%;width:var(--W);height:var(--H);transform:translate(-50%,-50%)}
+.frame .poster,.frame video,.frame .ending{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}
+/* the surround: paper, then peel, feathered over the frame's edges so the video itself never needs a mask */
+.surround{position:absolute;inset:0;pointer-events:none;background:var(--paper);
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(50% - var(--H)/2),transparent calc(50% - var(--H)*.455),transparent calc(50% + var(--H)*.455),#000 calc(50% + var(--H)/2));
+  mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(50% - var(--H)/2),transparent calc(50% - var(--H)*.455),transparent calc(50% + var(--H)*.455),#000 calc(50% + var(--H)/2));
+  -webkit-mask-composite:source-over;mask-composite:add}
+.surround .peelbg{position:absolute;inset:0;background:var(--peel) url("assets/peel.webp") center/cover;opacity:0;will-change:opacity}
+.frame .poster,.frame .ending{opacity:0;transition:opacity .6s var(--ease-soft)}
+.frame video{opacity:0;transition:opacity .5s var(--ease-soft);will-change:transform;transform:translateZ(0)}
+.stage.landed .poster{opacity:1}
+.stage.video-ready video{opacity:1}
+.stage.video-ready .poster{opacity:0}
+.stage.video-failed video{display:none}
+.stage.video-failed.late .ending{opacity:1}
+.stage.video-failed.late .poster{opacity:0}
+.dropper{position:absolute;left:29.3%;top:15.28%;width:41.4%;pointer-events:none;animation:drop 1.25s cubic-bezier(.3,0,.4,1) both;animation-delay:.25s}
+.stage.landed .dropper{opacity:0;transition:opacity .35s var(--ease-soft) .15s}
+@keyframes drop{
+  0%{transform:translateY(-120vh) scale(.96,1.04)}
+  55%{transform:translateY(0) scale(1,1)}
+  64%{transform:translateY(2%) scale(1.08,.9)}
+  76%{transform:translateY(-6%) scale(.97,1.03)}
+  88%{transform:translateY(0) scale(1.03,.97)}
+  100%{transform:translateY(0) scale(1,1)}
+}
+.ring{position:absolute;left:50%;bottom:22px;width:40px;height:40px;margin-left:-20px;color:var(--ink);opacity:.8;transition:opacity .5s var(--ease-soft)}
+.ring circle{transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .2s linear}
+.stage.video-ready .ring,.stage.video-failed .ring{opacity:0}
+
+/* hero bands */
+.band{position:absolute;top:50%;width:min(var(--lane),520px);transform:translateY(-50%);opacity:0;visibility:hidden}
+.band.left{left:clamp(20px,4vw,64px)}
+.band.right{right:clamp(20px,4vw,64px)}
+.chip{background:var(--panel);border:3px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);padding:clamp(16px,1.6vw,26px) clamp(18px,1.9vw,30px);transform:scale(calc(.94 + .06*var(--k,1)));transform-origin:50% 60%}
+.kicker{font:500 .78rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--text-secondary);margin:0 0 .6em}
+.band h2{font:400 clamp(1.8rem,2.9vw,3.4rem)/1.05 var(--display);margin:0;letter-spacing:.005em}
+.band p.line{font:600 clamp(1rem,1.15vw,1.25rem)/1.4 var(--body);margin:.7em 0 0;color:var(--text-secondary)}
+.w{display:inline-block;white-space:nowrap}
+.fx{display:inline-block;--kc:clamp(0,(var(--k,0) - var(--th,0))*var(--sp,2.6),1);opacity:var(--kc);transform:translate(calc((1 - var(--kc))*var(--jx,0px)),calc((1 - var(--kc))*var(--jy,0px))) rotate(calc((1 - var(--kc))*var(--jr,0deg)))}
+.band.settle{inset:0;top:0;width:auto;transform:none}
+.settle .s-left,.settle .s-right{position:absolute;top:50%;transform:translateY(-50%);width:min(var(--lane),460px)}
+.settle .s-left{left:clamp(20px,4vw,64px)}
+.settle .s-right{right:clamp(20px,4vw,64px)}
+.settle .logo{width:100%;max-width:400px;--kc:clamp(0,var(--k,0)*2.4,1);opacity:var(--kc);transform:translateY(calc((1 - var(--kc))*40px)) rotate(calc((1 - var(--kc))*-4deg))}
+.settle .chip p{margin:0;font:600 clamp(1.05rem,1.25vw,1.35rem)/1.4 var(--body)}
+.settle .btns{display:grid;gap:12px;--kb:clamp(0,(var(--k,0) - .55)*3.2,1);opacity:var(--kb);transform:translateY(calc((1 - var(--kb))*24px))}
+.settle .btns .btn{width:100%;justify-content:space-between}
+.band{will-change:opacity}
+.chip-cta{margin-top:16px;--kb:clamp(0,(var(--k,0) - .5)*3,1);opacity:var(--kb);transform:translateY(calc((1 - var(--kb))*14px))}
+.chip-cta .btn{padding:.7em 1em;font-size:clamp(.82rem,.9vw,.95rem);white-space:nowrap}
+.chip.release .cover{width:clamp(72px,7vw,110px);border:3px solid var(--ink);border-radius:8px;box-shadow:4px 4px 0 var(--ink);margin-bottom:14px;transform:rotate(-3deg)}
+.chip.press{padding-bottom:10px}
+.chip.press .kicker{margin-bottom:.2em}
+.outlet{display:block;text-decoration:none;padding:10px 0;border-top:2px dashed rgba(31,26,24,.35)}
+.outlet:first-of-type{border-top:0}
+.outlet .brand{display:block;font:400 clamp(1.45rem,2vw,2.1rem)/1.05 var(--display)}
+.outlet .what{display:block;margin-top:4px;font:500 clamp(.78rem,.9vw,.9rem)/1.35 var(--mono);color:var(--text-secondary);transition:color .25s var(--ease-out)}
+.outlet .what span{display:inline-block;transition:transform .3s var(--ease-out)}
+.outlet:hover .what{color:var(--ink)}
+.outlet:hover .what span{transform:translateX(5px)}
+body.hero-on .env,body.hero-on .fizz i{animation-play-state:paused}
+@media (max-height:620px){.band h2{font-size:clamp(1.5rem,2.4vw,2.4rem)}.settle .btns{gap:8px}.settle .btns .btn{padding:.6em 1em}}
+
+/* ---------- hero: static (phones, portrait tablets, reduced motion) ---------- */
+.hero-static{display:none;position:relative;min-height:100svh;background:var(--paper);padding:96px 16px 48px;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.hero-static .orange{width:min(62vw,300px);animation:drop 1.25s cubic-bezier(.3,0,.4,1) both .2s}
+.hero-static .logo{width:min(80vw,380px);margin:4px auto 0}
+.hero-static .line{font:600 1.1rem/1.45 var(--body);max-width:30ch;margin:0 auto}
+.hero-static .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(100%,460px);margin-top:10px}
+.hero-static .btns .btn{padding:.8em .6em;font-size:.95rem}
+.hero-static::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;background:var(--peel) url("assets/peel.webp") center/cover;border-top:3px solid var(--ink)}
+
+@media (max-width:720px),(orientation:portrait) and (max-width:1024px),(orientation:portrait) and (pointer:coarse),(orientation:landscape) and (pointer:coarse) and (max-height:560px),(prefers-reduced-motion:reduce){
+  .hero-scrub{display:none}
+  .hero-static{display:flex}
+}
+
+/* ---------- below the hero ---------- */
+.below{position:relative;padding:clamp(56px,8vw,120px) 0 0}
+.ribbon{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.ribbon path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.ribbon .r-ink{stroke:var(--ink);stroke-width:26px}
+.ribbon .r-pith{stroke:var(--pith);stroke-width:18px}
+.ribbon .r-dash{stroke:var(--accent);stroke-width:3px;stroke-dasharray:2 14}
+.wrap{position:relative;z-index:1;width:min(1180px,100% - 32px);margin:0 auto}
+.sec{position:relative;z-index:1;margin:0 auto clamp(64px,9vw,140px)}
+.panel{background:var(--panel);border:3px solid var(--ink);border-radius:22px;box-shadow:8px 8px 0 var(--ink);padding:clamp(22px,4vw,56px)}
+.label{display:inline-block;font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;background:var(--ink);color:var(--paper);padding:8px 12px;border-radius:999px;margin-bottom:18px}
+h2.big{font:400 clamp(2.4rem,5.6vw,4.6rem)/1 var(--display);margin:0 0 .3em}
+.lede{font-size:clamp(1.08rem,1.4vw,1.25rem);max-width:52ch;color:var(--text-secondary);margin:0 0 1.4em}
+
+/* entrances */
+.reveal .rv{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease-out),transform .8s var(--ease-out)}
+.reveal.in .rv{opacity:1;transform:none}
+.reveal.in .rv:nth-child(2){transition-delay:.08s}
+.reveal.in .rv:nth-child(3){transition-delay:.16s}
+.reveal.in .rv:nth-child(4){transition-delay:.24s}
+.reveal.in .rv:nth-child(5){transition-delay:.32s}
+.reveal.in.settled .rv,.reveal.in.settled .rv:nth-child(n){transition-delay:0s}
+
+/* take your pick */
+.pick h2.big{color:var(--ink);text-align:center;background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);display:table;margin:0 auto 34px;padding:.18em .5em .28em}
+.doors{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,2vw,24px)}
+.door{position:relative;display:flex;flex-direction:column;gap:10px;min-height:250px;text-decoration:none;background:var(--panel);border:3px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--ink);padding:24px 22px;transition:transform .35s var(--ease-out),box-shadow .35s var(--ease-out),background-color .35s var(--ease-out)}
+.door:hover{transform:translate(-3px,-5px) rotate(-.6deg);box-shadow:10px 11px 0 var(--ink);background:#fff}
+.door svg{width:58px;height:58px}
+.door h3{font:400 1.7rem/1.05 var(--display);margin:6px 0 0}
+.door p{margin:0;color:var(--text-secondary);font-weight:600}
+.door .go{margin-top:auto;font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:8px}
+.door .go span{display:inline-block;transition:transform .35s var(--ease-out)}
+.door:hover .go span{transform:translateX(6px)}
+@media (max-width:980px){.doors{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.doors{grid-template-columns:1fr}.door{min-height:0}}
+
+/* gigs */
+.gigs .panel{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:clamp(24px,4vw,56px);align-items:start}
+.giglist{list-style:none;margin:0;padding:0;border-top:3px solid var(--ink)}
+.giglist li{display:grid;grid-template-columns:110px 1fr auto;gap:16px;align-items:baseline;padding:18px 0;border-bottom:3px solid var(--ink)}
+.giglist .date{font:500 .95rem/1.2 var(--mono);text-transform:uppercase}
+.giglist .venue{font:800 1.15rem/1.25 var(--body)}
+.giglist .city{display:block;font-weight:400;color:var(--text-secondary);font-size:.98rem}
+.empty{border:3px dashed var(--ink);border-radius:18px;padding:26px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;background:var(--paper)}
+.empty p{margin:0;font:600 1.1rem/1.4 var(--body);max-width:32ch}
+.gig-note{font:500 .82rem/1.4 var(--mono);color:var(--text-secondary);margin-top:18px}
+@media (max-width:860px){.gigs .panel{grid-template-columns:1fr}.giglist li{grid-template-columns:1fr auto}.giglist .date{grid-column:1/-1}}
+
+/* listen */
+.listen .panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(28px,5vw,64px);align-items:center}
+.record{position:relative;aspect-ratio:1;max-width:520px;width:100%;margin:0 auto}
+.record .disc{position:absolute;top:5%;left:18%;width:90%;aspect-ratio:1;border-radius:50%;background:repeating-radial-gradient(circle,#231e1c 0 2px,#161211 2px 4px);border:3px solid var(--ink)}
+.record .disc::after{content:"";position:absolute;inset:34%;border-radius:50%;background:var(--accent);border:3px solid var(--ink);box-shadow:inset 0 0 0 10px var(--pith)}
+.record .disc.spin{animation:spin 9s linear infinite;animation-delay:-3s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.record img{position:relative;width:90%;border:3px solid var(--ink);border-radius:8px;box-shadow:8px 8px 0 var(--ink);transform:rotate(-2deg)}
+.tracks{list-style:none;margin:0 0 22px;padding:0;columns:2;column-gap:28px}
+.tracks li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:2px solid rgba(31,26,24,.18);break-inside:avoid;font-weight:600}
+.tracks .n{font:500 .8rem/1 var(--mono);color:var(--text-secondary);min-width:2ch}
+.tracks .t{font:400 .8rem/1 var(--mono);color:var(--text-secondary);margin-left:auto}
+.tracks em{font-style:normal;font:500 .68rem/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;background:var(--leaf);color:#fff;padding:3px 6px;border-radius:6px;white-space:nowrap}
+.platforms{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.player{border:3px solid var(--ink);border-radius:18px;background:var(--paper);padding:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.player p{margin:0;font:500 .82rem/1.4 var(--mono);color:var(--text-secondary)}
+.player iframe{width:100%;height:352px;border:0;border-radius:12px}
+.merch{margin:18px 0 0;font-size:.98rem;color:var(--text-secondary)}
+@media (max-width:860px){.listen .panel{grid-template-columns:1fr}.tracks{columns:1}}
+
+/* band */
+.band-sec .panel{position:relative}
+.band-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(28px,5vw,64px);align-items:start}
+.photos{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.photo{margin:0;background:#fff;border:3px solid var(--ink);padding:10px 10px 14px;box-shadow:6px 6px 0 var(--ink);transition:transform .45s var(--ease-out)}
+.photo img{width:100%;aspect-ratio:4/5;object-fit:cover;border:2px solid var(--ink)}
+.photo figcaption{font:500 .74rem/1.3 var(--mono);margin-top:8px;color:var(--text-secondary)}
+.photo.a{grid-column:1/-1;transform:rotate(-1.2deg)}
+.photo.a img{aspect-ratio:5/4}
+.photo.b{transform:rotate(1.6deg)}
+.photo.c{transform:rotate(-2deg);margin-top:26px}
+.photo:hover{transform:rotate(0) scale(1.02)}
+.members{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-wrap:wrap;gap:8px}
+.members li{font:600 .95rem/1 var(--body);border:2px solid var(--ink);border-radius:999px;padding:9px 13px;background:var(--paper)}
+.quotes{display:grid;gap:14px}
+blockquote{margin:0;background:var(--accent);border:3px solid var(--ink);border-radius:18px;padding:18px 20px;box-shadow:5px 5px 0 var(--ink)}
+blockquote p{margin:0;font:400 1.45rem/1.15 var(--display)}
+blockquote cite{display:block;margin-top:8px;font:500 .78rem/1.2 var(--mono);font-style:normal;text-transform:uppercase;letter-spacing:.08em}
+a.quote{text-decoration:none;display:block}
+a.quote blockquote{transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out)}
+a.quote:hover blockquote{transform:translate(-2px,-3px);box-shadow:8px 8px 0 var(--ink)}
+.latest{display:flex;gap:16px;align-items:center;border:3px solid var(--ink);border-radius:18px;background:var(--paper);padding:14px;margin-bottom:18px}
+.latest img{width:84px;border:3px solid var(--ink);border-radius:8px;flex:0 0 auto}
+.latest p{margin:0 0 8px;font:600 1rem/1.35 var(--body)}
+.latest .kicker{margin:0 0 4px}
+.latest .btn{padding:.6em 1em;font-size:.92rem;white-space:nowrap}
+@media (max-width:860px){.band-grid{grid-template-columns:1fr}}
+
+/* list + the shake */
+.list .panel{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(28px,5vw,64px);align-items:center}
+.shake{display:flex;flex-direction:column;align-items:center;gap:14px}
+.bottle-btn{background:none;border:0;padding:6px;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;border-radius:18px}
+.bottle{width:min(200px,46vw);height:auto;overflow:visible;--p:0;--amp:0}
+.bottle-btn.holding .bottle{animation:shake .11s linear infinite}
+@keyframes shake{0%,100%{transform:rotate(calc(var(--amp)*-1deg))}50%{transform:rotate(calc(var(--amp)*1deg))}}
+.bottle .liquid{transform:translateY(calc((1 - var(--p))*48px));transition:transform .2s linear}
+.bottle .bub{opacity:calc(.25 + .75*var(--p))}
+.bottle .cap{transition:transform .9s var(--ease-out),opacity .9s var(--ease-out);transform-box:fill-box;transform-origin:50% 100%}
+.popped .bottle .cap{transform:translate(18px,-150px) rotate(220deg);opacity:0}
+.bottle .burst{opacity:0;transform-box:fill-box;transform-origin:50% 100%;transform:scale(.2)}
+.popped .bottle .burst{opacity:1;transform:scale(1);transition:transform .7s var(--ease-out),opacity .4s}
+.meter{width:min(220px,60vw);height:14px;border:3px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden}
+.meter i{display:block;height:100%;width:100%;background:var(--leaf);transform-origin:0 50%;transform:scaleX(var(--p,0))}
+.shake .hint{font:500 .8rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.08em;text-align:center;margin:0}
+.perks{list-style:none;margin:0 0 24px;padding:0;display:grid;gap:10px}
+.perks li{display:flex;gap:12px;align-items:center;font:700 1.08rem/1.35 var(--body);padding:12px 14px;border:2px solid rgba(31,26,24,.25);border-radius:14px;opacity:.45;transition:opacity .5s var(--ease-out),background-color .5s var(--ease-out),border-color .5s var(--ease-out),transform .5s var(--ease-out)}
+.perks li svg{flex:0 0 22px}
+.popped-perks .perks li{opacity:1;background:var(--paper);border-color:var(--ink);transform:translateX(4px)}
+.popped-perks .perks li:nth-child(2){transition-delay:.18s}
+.popped-perks .perks li:nth-child(3){transition-delay:.36s}
+.popped-perks.settled .perks li,.popped-perks.settled .perks li:nth-child(n){transition-delay:0s}
+form.signup{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{flex:1 1 240px;display:flex;flex-direction:column;gap:6px}
+.field label{font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.field input{font:600 1.05rem/1.2 var(--body);padding:.85em 1em;border:3px solid var(--ink);border-radius:15px;background:#fff;color:var(--ink);min-height:48px}
+.field input::placeholder{color:#8a7f78}
+.success{display:none;margin-top:16px;padding:16px 18px;border:3px solid var(--ink);border-radius:15px;background:var(--leaf);color:#fff;font:700 1.08rem/1.4 var(--body)}
+.sent .success{display:block}
+.sent form.signup{display:none}
+@media (max-width:860px){.list .panel{grid-template-columns:1fr}}
+
+/* book */
+.book .panel{position:relative;background:var(--accent);overflow:hidden}
+.book .inner{position:relative;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:end}
+.book .lede{color:var(--ink)}
+.facts{list-style:none;margin:0 0 24px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.facts li{font:500 .82rem/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;background:var(--panel);border:2px solid var(--ink);border-radius:999px;padding:10px 12px}
+.book .mailbox{background:var(--panel);border:3px solid var(--ink);border-radius:18px;padding:22px;box-shadow:6px 6px 0 var(--ink)}
+.book .mailbox p{margin:0 0 14px;font-weight:600}
+.book .mailbox a.addr{font:500 .95rem/1.3 var(--mono);word-break:break-all}
+.book .peeker{position:absolute;right:-30px;top:-40px;width:170px;opacity:.95;transform:rotate(14deg);animation:peek 6s var(--ease-soft) infinite alternate;animation-delay:-2s}
+@keyframes peek{to{transform:rotate(8deg) translateY(10px)}}
+@media (max-width:860px){.book .inner{grid-template-columns:1fr}.book .peeker{width:110px;right:-20px;top:-26px}.book h2.big{padding-right:64px}}
+
+/* footer */
+footer{position:relative;z-index:1;background:var(--ink);color:var(--paper);border-top:3px solid var(--ink);padding:56px 0 40px}
+footer .wrap{display:grid;grid-template-columns:auto 1fr;gap:28px 48px;align-items:center}
+footer .flogo{width:170px}
+.socials{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;list-style:none;margin:0;padding:0}
+.socials a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:2px solid rgba(237,234,221,.5);border-radius:15px;text-decoration:none;font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;transition:background-color .25s var(--ease-out),color .25s var(--ease-out)}
+.socials a:hover{background:var(--paper);color:var(--ink)}
+footer .small{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font:400 .82rem/1.4 var(--mono);color:#cfc8b8;border-top:1px solid rgba(237,234,221,.25);padding-top:20px}
+footer .small a{color:#cfc8b8}
+@media (max-width:720px){footer .wrap{grid-template-columns:1fr}.socials{justify-content:flex-start}}
+
+/* living loops pause off-screen and on hidden tabs */
+.off .disc.spin,.off .peeker{animation-play-state:paused}
+body.paused *,body.paused *::before,body.paused *::after{animation-play-state:paused!important}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;transition-delay:0s!important}
+  .reveal .rv{opacity:1;transform:none}
+  .env{transform:scale(1.04)}
+  .fizz{display:none}
+  .hero-static .orange{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="env" aria-hidden="true"></div>
+<div class="fizz" aria-hidden="true">
+  <i style="left:6%;--s:10px;--d:26s;--dl:-3s"></i><i style="left:14%;--s:6px;--d:19s;--dl:-11s"></i>
+  <i style="left:27%;--s:14px;--d:31s;--dl:-7s"></i><i style="left:41%;--s:8px;--d:23s;--dl:-15s"></i>
+  <i style="left:58%;--s:12px;--d:28s;--dl:-2s"></i><i style="left:69%;--s:7px;--d:21s;--dl:-9s"></i>
+  <i style="left:81%;--s:16px;--d:34s;--dl:-19s"></i><i style="left:93%;--s:9px;--d:24s;--dl:-5s"></i>
+</div>
+
+<nav class="nav" aria-label="Main">
+  <a class="brand" href="#top" aria-label="Fizzy Orange, back to the top"><img src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798"></a>
+  <ul>
+    <li><a class="link" href="#gigs">Gigs</a></li>
+    <li><a class="link" href="#listen">Listen</a></li>
+    <li><a class="link" href="#list"><span class="long">Mailing list</span><span class="short">List</span></a></li>
+    <li><a class="link" href="#book">Book</a></li>
+  </ul>
+</nav>
+
+<main id="main" tabindex="-1">
+  <span id="top"></span>
+
+  <!-- the scroll journey (laptops and desktops) -->
+  <section class="hero-scrub" id="journey" aria-label="Fizzy Orange">
+    <div class="stage" id="stage">
+      <div class="frame" aria-hidden="true">
+        <div class="poster" id="poster"></div>
+        <div class="ending" id="ending"></div>
+        <video id="hero" preload="none" muted playsinline aria-hidden="true" tabindex="-1"></video>
+      </div>
+      <div class="surround" aria-hidden="true"><div class="peelbg" id="peelbg"></div></div>
+      <div class="frame" aria-hidden="true"><img class="dropper" src="assets/orange-happy.webp" alt="" width="900" height="900"></div>
+      <svg class="ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="126" style="stroke-dashoffset:var(--ld,126)"/></svg>
+
+      <div class="band right" data-range="0.10,0.30" data-fx="unpeel">
+        <div class="chip">
+          <p class="kicker">Live</p>
+          <h2 data-split>Catch us live.</h2>
+          <p class="line" data-split="words" id="heroGigLine">New dates are on the way. Join the list and hear first.</p>
+          <div class="chip-cta"><a class="btn" id="heroGigBtn" href="#gigs">Gigs and tickets <span aria-hidden="true">→</span></a></div>
+        </div>
+      </div>
+      <div class="band left" data-range="0.35,0.56" data-fx="shiver">
+        <div class="chip release">
+          <img class="cover" src="assets/old-ones.jpg" alt="The Old Ones cover: a busy black and white street market" width="480" height="480">
+          <div>
+            <p class="kicker">Out now on Spotify</p>
+            <h2 data-split>Old Ones.</h2>
+            <p class="line" data-split="words">Our latest record. Eight songs, all on real gear.</p>
+          </div>
+          <div class="chip-cta"><a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a></div>
+        </div>
+      </div>
+      <div class="band right" data-range="0.60,0.79" data-fx="splash">
+        <div class="chip press">
+          <p class="kicker">As featured in</p>
+          <a class="outlet" href="https://www.hotpress.com/culture/premiere-fizzy-orange-live-at-studio-5a-in-the-isle-of-wight-22938762" target="_blank" rel="noopener">
+            <span class="brand" data-split>Hotpress</span>
+            <span class="what">Premiere: Live at Studio 5A <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="outlet" href="https://www.wonderlandmagazine.com/2024/04/04/fizzy-orange/" target="_blank" rel="noopener">
+            <span class="brand" data-split>Wonderland</span>
+            <span class="what">"Infectious rhythm and melodic hooks." <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="outlet" href="https://nialler9.com/10-best-new-irish-tracks-march-27/" target="_blank" rel="noopener">
+            <span class="brand" data-split>Nialler9</span>
+            <span class="what">10 best new Irish tracks of the week <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </div>
+      <div class="band settle" data-range="0.83,1" data-fx="rise">
+        <div class="s-left">
+          <img class="logo" src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798">
+          <div class="chip" style="margin-top:18px"><p data-split="words">Freshly squeezed in Dublin. Best served loud.</p></div>
+        </div>
+        <div class="s-right">
+          <div class="btns">
+            <a class="btn ghost" href="#gigs">Get gig tickets <span aria-hidden="true">→</span></a>
+            <a class="btn ghost" href="#listen">Listen now <span aria-hidden="true">→</span></a>
+            <a class="btn ghost" href="#list">Join the list <span aria-hidden="true">→</span></a>
+            <a class="btn ghost" href="#book">Book the band <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- the static hero (phones, portrait tablets, reduced motion) -->
+  <section class="hero-static" aria-label="Fizzy Orange">
+    <img class="orange" src="assets/orange-happy.webp" alt="The Fizzy Orange character, a grinning cartoon orange" width="900" height="900">
+    <p class="kicker">Dublin city · six-piece · all analogue</p>
+    <h1 class="vh">Fizzy Orange</h1>
+    <img class="logo" src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798">
+    <p class="line">Freshly squeezed in Dublin. Best served loud.</p>
+    <div class="btns">
+      <a class="btn" href="#gigs">Get gig tickets</a>
+      <a class="btn" href="#listen">Listen now</a>
+      <a class="btn" href="#list">Join the list</a>
+      <a class="btn" href="#book">Book the band</a>
+    </div>
+  </section>
+
+  <div class="below" id="below">
+    <svg class="ribbon" id="ribbon" viewBox="0 0 100 1000" preserveAspectRatio="none" aria-hidden="true">
+      <path class="r-ink" pathLength="1000" d="M50 0 C50 40 5 40 5 90 S5 170 5 210 C5 260 95 250 95 300 S95 380 95 420 C95 470 5 460 5 510 S5 590 5 630 C5 680 95 670 95 720 S95 800 95 840 C95 890 50 900 50 1000"/>
+      <path class="r-pith" pathLength="1000" d="M50 0 C50 40 5 40 5 90 S5 170 5 210 C5 260 95 250 95 300 S95 380 95 420 C95 470 5 460 5 510 S5 590 5 630 C5 680 95 670 95 720 S95 800 95 840 C95 890 50 900 50 1000"/>
+    </svg>
+
+    <!-- take your pick -->
+    <section class="sec pick reveal" id="start" aria-labelledby="pick-h">
+      <div class="wrap">
+        <h2 class="big rv" id="pick-h">Take your pick.</h2>
+        <div class="doors">
+          <a class="door rv" href="#gigs">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 20h52v8a5 5 0 0 0 0 10v8H6v-8a5 5 0 0 0 0-10z" fill="#F07A2A" stroke="#1F1A18" stroke-width="3.5" stroke-linejoin="round"/><path d="M40 21v24" stroke="#1F1A18" stroke-width="3" stroke-dasharray="3 4"/></svg>
+            <h3>See us live.</h3><p>Dates and tickets.</p><span class="go">Gigs <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="door rv" href="#listen">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#1F1A18"/><circle cx="32" cy="32" r="19" fill="none" stroke="#4a403a" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="#F07A2A" stroke="#1F1A18" stroke-width="3"/><circle cx="32" cy="32" r="2.5" fill="#1F1A18"/></svg>
+            <h3>Hear the record.</h3><p>In Mono, on every app.</p><span class="go">Listen <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="door rv" href="#list">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="14" width="52" height="36" rx="5" fill="#F8EBD3" stroke="#1F1A18" stroke-width="3.5"/><path d="M8 17l24 19 24-19" fill="none" stroke="#1F1A18" stroke-width="3.5" stroke-linejoin="round"/><circle cx="50" cy="16" r="8" fill="#F07A2A" stroke="#1F1A18" stroke-width="3"/></svg>
+            <h3>Get the news first.</h3><p>Gigs and songs, straight to your inbox.</p><span class="go">Mailing list <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="door rv" href="#book">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="10" width="48" height="46" rx="5" fill="#F8EBD3" stroke="#1F1A18" stroke-width="3.5"/><path d="M8 22h48" stroke="#1F1A18" stroke-width="3.5"/><path d="M20 6v9M44 6v9" stroke="#1F1A18" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="39" r="8" fill="#F07A2A" stroke="#1F1A18" stroke-width="3"/></svg>
+            <h3>Book the band.</h3><p>Venues, festivals and promoters.</p><span class="go">Booking <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- gigs -->
+    <section class="sec gigs reveal" id="gigs" aria-labelledby="gigs-h">
+      <div class="wrap">
+        <div class="panel">
+          <div class="rv">
+            <span class="label">Gigs</span>
+            <h2 class="big" id="gigs-h">Catch us live.</h2>
+            <p class="lede">Six of us on one stage, and a room that won't stand still.</p>
+          </div>
+          <div class="rv" id="gigbox"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- listen -->
+    <section class="sec listen reveal" id="listen" aria-labelledby="listen-h">
+      <div class="wrap">
+        <div class="panel">
+          <div class="record rv" id="record">
+            <div class="disc spin" aria-hidden="true"></div>
+            <img src="assets/in-mono.jpg" alt="The In Mono cover: the six band members in black and white, looking up, under the words Fizzy Orange In Mono" width="1000" height="1000" loading="lazy">
+          </div>
+          <div class="rv">
+            <span class="label">Listen</span>
+            <h2 class="big" id="listen-h">In Mono.</h2>
+            <p class="lede">Our debut EP, now in a deluxe edition with three songs nobody's heard yet. Cut at Sonic Studios and mixed in mono, the old way.</p>
+            <ol class="tracks">
+              <li><span class="n">01</span>Rita<span class="t">2:49</span></li>
+              <li><span class="n">02</span>By The Bay<span class="t">2:46</span></li>
+              <li><span class="n">03</span>Chelsea Bakery<span class="t">2:57</span></li>
+              <li><span class="n">04</span>It Hurts Me Too<span class="t">1:54</span></li>
+              <li><span class="n">05</span>CHOO CHOO<span class="t">5:37</span></li>
+              <li><span class="n">06</span>Good Time<span class="t">2:18</span></li>
+              <li><span class="n">07</span>Italian Momma <em>New</em><span class="t">2:34</span></li>
+              <li><span class="n">08</span>Walking Home With You <em>New</em><span class="t">2:33</span></li>
+              <li><span class="n">09</span>Something is Wrong <em>New</em><span class="t">2:04</span></li>
+            </ol>
+            <div class="platforms">
+              <a class="btn" href="https://open.spotify.com/artist/1hSt79a7e2OZzSD3pJgtCZ" target="_blank" rel="noopener">Spotify</a>
+              <a class="btn ghost" href="https://music.apple.com/ie/artist/fizzy-orange/1522993197" target="_blank" rel="noopener">Apple Music</a>
+              <a class="btn ghost" href="https://fizzyorange.bandcamp.com/album/in-mono-deluxe" target="_blank" rel="noopener">Bandcamp</a>
+              <a class="btn ghost" href="https://www.youtube.com/@fizzyorange5703" target="_blank" rel="noopener">YouTube</a>
+            </div>
+            <div class="latest">
+              <img src="assets/old-ones.jpg" alt="The Old Ones cover" width="480" height="480" loading="lazy">
+              <div>
+                <p class="kicker">Newest on Spotify</p>
+                <p>Old Ones. Our latest record, eight songs long.</p>
+                <a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a>
+              </div>
+            </div>
+            <div class="player" id="player">
+              <p>Nothing plays until you press play.</p>
+              <button class="btn ghost" type="button" id="loadPlayer">Load the Spotify player</button>
+            </div>
+            <p class="merch">Want it on tape? The limited <a href="https://www.chalkpitcassetteclub.com/cassettes/p/fizzy-orange-in-mono-ep-limited-edition-cassette-tape" target="_blank" rel="noopener">In Mono cassette</a> is at Chalk Pit Cassette Club. Tees are €25 at the merch desk.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- the band -->
+    <section class="sec band-sec reveal" id="band" aria-labelledby="band-h">
+      <div class="wrap">
+        <div class="panel">
+          <div class="band-grid">
+            <div class="photos rv">
+              <figure class="photo a"><img src="assets/band-studio.jpg" alt="The six members of Fizzy Orange in their home studio, with a boombox and a red lamp behind them" width="900" height="1080" loading="lazy"><figcaption>The studio, Dublin</figcaption></figure>
+              <figure class="photo b"><img src="assets/band-rooftop.jpg" alt="The band grinning together on a sunny rooftop" width="900" height="900" loading="lazy"><figcaption>Golden hour</figcaption></figure>
+              <figure class="photo c"><img src="assets/band-arch.jpg" alt="The band in black and white under a stone archway, one of them sticking his tongue out" width="480" height="480" loading="lazy"><figcaption>In mono, obviously</figcaption></figure>
+            </div>
+            <div class="rv">
+              <span class="label">Dublin City Soul</span>
+              <h2 class="big" id="band-h">Six mates from Dublin.</h2>
+              <p class="lede">We've been playing together since school. Kevin, Jack, Cian, Eoin and Rioghan started it, and Maxime joined just before In Mono. Sixties songwriting, seventies studio sounds, eighties home recording, all on real gear.</p>
+              <ul class="members" aria-label="Band members">
+                <li>Kevin Keeley</li><li>Jack Martin</li><li>Cian Byrne</li><li>Eoin Dillon</li><li>Rioghan Mc Carthy</li><li>Maxime Arnold</li>
+              </ul>
+              <p class="kicker" style="margin-top:4px">As featured in</p>
+              <div class="quotes">
+                <a class="quote" href="https://www.hotpress.com/culture/premiere-fizzy-orange-live-at-studio-5a-in-the-isle-of-wight-22938762" target="_blank" rel="noopener"><blockquote><p>Hotpress</p><cite>Premiere: Live at Studio 5A <span aria-hidden="true">→</span></cite></blockquote></a>
+                <a class="quote" href="https://www.wonderlandmagazine.com/2024/04/04/fizzy-orange/" target="_blank" rel="noopener"><blockquote><p>Wonderland</p><cite>"Infectious rhythm and melodic hooks." <span aria-hidden="true">→</span></cite></blockquote></a>
+                <a class="quote" href="https://nialler9.com/10-best-new-irish-tracks-march-27/" target="_blank" rel="noopener"><blockquote><p>Nialler9</p><cite>10 best new Irish tracks of the week <span aria-hidden="true">→</span></cite></blockquote></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- mailing list -->
+    <section class="sec list reveal" id="list" aria-labelledby="list-h">
+      <div class="wrap">
+        <div class="panel" id="listPanel">
+          <div class="shake rv">
+            <button class="bottle-btn" type="button" id="bottle" aria-describedby="shakeHint">
+              <span class="vh">Press and hold to shake the bottle</span>
+              <svg class="bottle" viewBox="0 0 200 360" aria-hidden="true">
+                <defs><clipPath id="bclip"><path d="M82 60h36v46c0 14 42 26 42 64v150c0 14-10 24-24 24H64c-14 0-24-10-24-24V170c0-38 42-50 42-64z"/></clipPath></defs>
+                <g class="burst"><circle cx="100" cy="30" r="16" fill="#F8EBD3" stroke="#1F1A18" stroke-width="4"/><circle cx="76" cy="16" r="10" fill="#F8EBD3" stroke="#1F1A18" stroke-width="4"/><circle cx="126" cy="12" r="12" fill="#F8EBD3" stroke="#1F1A18" stroke-width="4"/><circle cx="104" cy="-6" r="7" fill="#F8EBD3" stroke="#1F1A18" stroke-width="3"/></g>
+                <g clip-path="url(#bclip)">
+                  <rect x="30" y="40" width="140" height="310" fill="#F8EBD3"/>
+                  <g class="liquid">
+                    <rect x="30" y="112" width="140" height="300" fill="#F9C58F"/>
+                    <path d="M30 112q10-10 20 0t20 0 20 0 20 0 20 0 20 0 20 0v10H30z" fill="#fff" stroke="#1F1A18" stroke-width="3"/>
+                    <g class="bub" fill="none" stroke="#1F1A18" stroke-width="2.5"><circle cx="70" cy="300" r="5"/><circle cx="96" cy="250" r="7"/><circle cx="128" cy="286" r="4"/><circle cx="84" cy="200" r="4"/><circle cx="118" cy="220" r="6"/><circle cx="104" cy="166" r="3.5"/><circle cx="62" cy="244" r="3"/><circle cx="138" cy="180" r="4.5"/></g>
+                  </g>
+                </g>
+                <path d="M82 60h36v46c0 14 42 26 42 64v150c0 14-10 24-24 24H64c-14 0-24-10-24-24V170c0-38 42-50 42-64z" fill="none" stroke="#1F1A18" stroke-width="6" stroke-linejoin="round"/>
+                <rect x="52" y="214" width="96" height="70" rx="10" fill="#F07A2A" stroke="#1F1A18" stroke-width="4"/>
+                <circle cx="100" cy="252" r="17" fill="#EE6605" stroke="#1F1A18" stroke-width="3.5"/><path d="M100 235c2-7 10-9 16-6-3 6-10 8-16 6z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2.5"/>
+                <path d="M56 180c0-12 8-20 16-24" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+                <g class="cap"><rect x="76" y="38" width="48" height="26" rx="5" fill="#EE6605" stroke="#1F1A18" stroke-width="5"/><path d="M84 40v22M92 40v22M100 40v22M108 40v22M116 40v22" stroke="#1F1A18" stroke-width="2.5"/></g>
+              </svg>
+            </button>
+            <div class="meter" aria-hidden="true"><i></i></div>
+            <p class="hint" id="shakeHint">Press and hold to shake it up</p>
+          </div>
+          <div class="rv">
+            <span class="label">Mailing list</span>
+            <h2 class="big" id="list-h">Get the fizz first.</h2>
+            <p class="lede">Gig dates and new songs, before anyone else.</p>
+            <ul class="perks">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>First to hear about gigs.</li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>New songs before release day.</li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>No spam. We're too busy rehearsing.</li>
+            </ul>
+            <div id="signupBox">
+              <form class="signup" id="signup" novalidate>
+                <div class="field">
+                  <label for="email">Your email</label>
+                  <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+                </div>
+                <button class="btn" type="submit">Sign me up</button>
+              </form>
+              <p class="success" role="status" id="success">You're on the list. See you down the front.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- booking -->
+    <section class="sec book reveal" id="book" aria-labelledby="book-h">
+      <div class="wrap">
+        <div class="panel">
+          <img class="peeker" src="assets/orange-happy.webp" alt="" width="900" height="900" loading="lazy">
+          <div class="inner">
+            <div class="rv">
+              <span class="label">Bookings</span>
+              <h2 class="big" id="book-h">Book Fizzy Orange.</h2>
+              <p class="lede">Venues, festivals and promoters: tell us the date, the place and the plan.</p>
+              <ul class="facts"><li>Six-piece live band</li><li>Based in Dublin</li><li>Playing Ireland and the UK</li></ul>
+            </div>
+            <div class="mailbox rv">
+              <p>Drop us a line and we'll get back to you.</p>
+              <a class="btn" href="mailto:babylonire@gmail.com?subject=Booking%20enquiry">Email the band <span aria-hidden="true">→</span></a>
+              <p style="margin:14px 0 0"><a class="addr" href="mailto:babylonire@gmail.com?subject=Booking%20enquiry">babylonire@gmail.com</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img class="flogo" src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798" loading="lazy">
+    <ul class="socials">
+      <li><a href="https://www.instagram.com/fizzy_orange_/" target="_blank" rel="noopener">Instagram</a></li>
+      <li><a href="https://open.spotify.com/artist/1hSt79a7e2OZzSD3pJgtCZ" target="_blank" rel="noopener">Spotify</a></li>
+      <li><a href="https://music.apple.com/ie/artist/fizzy-orange/1522993197" target="_blank" rel="noopener">Apple Music</a></li>
+      <li><a href="https://www.youtube.com/@fizzyorange5703" target="_blank" rel="noopener">YouTube</a></li>
+      <li><a href="https://www.tiktok.com/@fizzyorangemusic" target="_blank" rel="noopener">TikTok</a></li>
+    </ul>
+    <div class="small"><span>© 2026 Fizzy Orange. Made in Dublin.</span><a href="mailto:babylonire@gmail.com">babylonire@gmail.com</a></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  /* ================= editable data ================= */
+  // Add gigs here. Past dates hide themselves automatically.
+  // { date: '2026-11-14', venue: "Whelan's", city: 'Dublin', url: 'https://...' }
+  const GIGS = [];
+  // Paste the Formspree form address here (for example 'https://formspree.io/f/abcdwxyz').
+  // Until then, sign-ups open an email to the band instead.
+  const FORM_ENDPOINT = '';
+  const BAND_EMAIL = 'babylonire@gmail.com';
+
+  /* ================= the scroll hero ================= */
+  const VIDEO_URL = 'assets/hero-scrub.mp4';
+  const VIDEO_BYTES = 11813290;          // the encoded file's real size, used when Content-Length is missing
+  const PEEL_IN = [0.31, 0.39];          // where the footage's backdrop turns from paper to peel
+  const heroSec = document.querySelector('.hero-scrub');
+  const stage = document.getElementById('stage');
+  const video = document.getElementById('hero');
+  const ring = stage.querySelector('.ring circle:last-child');
+  const posterEl = document.getElementById('poster');
+  const endingEl = document.getElementById('ending');
+  const peelbg = document.getElementById('peelbg');
+  const bands = [...stage.querySelectorAll('.band')];
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const smooth = (p, e0, e1) => { const t = clamp((p - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+  function rng(seed){ let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+  // the next gig, if there is one, fills the hero's gig box before the text is split
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const upcoming = GIGS.filter(g => new Date(g.date + 'T23:59:59') >= today).sort((x, y) => x.date.localeCompare(y.date));
+  const gigDate = g => new Date(g.date + 'T12:00:00').toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
+  if (upcoming.length) {
+    const g = upcoming[0];
+    document.getElementById('heroGigLine').textContent = 'Next up: ' + gigDate(g) + ', ' + g.venue + ', ' + g.city + '.';
+    const btn = document.getElementById('heroGigBtn');
+    btn.href = g.url; btn.target = '_blank'; btn.rel = 'noopener';
+    btn.firstChild.textContent = 'Get tickets ';
+  }
+
+  // split headlines into words and characters, once
+  bands.forEach((band, bi) => {
+    const fx = band.dataset.fx;
+    const r = rng(101 + bi * 17);
+    band.querySelectorAll('[data-split]').forEach((el, ei) => {
+      const text = el.textContent.trim();
+      const byWord = el.dataset.split === 'words' || fx === 'drop' || fx === 'rise';
+      const isLine = el.classList.contains('line') || el.dataset.split === 'words';
+      el.textContent = '';
+      const sr = document.createElement('span'); sr.className = 'vh'; sr.textContent = text; el.appendChild(sr);
+      const vis = document.createElement('span'); vis.setAttribute('aria-hidden', 'true'); el.appendChild(vis);
+      const words = text.split(' ');
+      const total = text.replace(/ /g, '').length;
+      let ci = 0;
+      words.forEach((word, wi) => {
+        const w = document.createElement('span'); w.className = 'w';
+        if (byWord) {
+          w.classList.add('fx'); w.textContent = word;
+          const base = isLine && fx !== 'rise' ? 0.32 : 0;
+          const th = base + (wi / Math.max(1, words.length)) * 0.4;
+          w.style.setProperty('--th', th.toFixed(3));
+          if (fx === 'drop' && !isLine) { w.style.setProperty('--jy', '-56px'); w.style.setProperty('--jr', ((r() - .5) * 14).toFixed(1) + 'deg'); w.style.setProperty('--sp', '2.4'); }
+          else { w.style.setProperty('--jy', '26px'); w.style.setProperty('--sp', '3'); }
+        } else {
+          [...word].forEach(ch => {
+            const c = document.createElement('span'); c.className = 'c fx'; c.textContent = ch;
+            let th, jx, jy, jr, sp = 2.6;
+            if (fx === 'unpeel') { th = ci / total * 0.45 + r() * 0.04; jx = -(18 + r() * 26); jy = -(24 + r() * 20); jr = -(30 + r() * 50); }
+            else if (fx === 'shiver') { th = r() * 0.45; jx = (r() - .5) * 18; jy = (r() - .5) * 18; jr = (r() - .5) * 24; sp = 3.2; }
+            else { th = r() * 0.5; const a = r() * Math.PI * 2, d = 70 + r() * 110; jx = Math.cos(a) * d; jy = Math.sin(a) * d; jr = (r() - .5) * 160; sp = 2.8; }
+            c.style.setProperty('--th', th.toFixed(3)); c.style.setProperty('--jx', jx.toFixed(1) + 'px');
+            c.style.setProperty('--jy', jy.toFixed(1) + 'px'); c.style.setProperty('--jr', jr.toFixed(1) + 'deg'); c.style.setProperty('--sp', sp);
+            w.appendChild(c); ci++;
+          });
+        }
+        vis.appendChild(w);
+        if (wi < words.length - 1) vis.appendChild(document.createTextNode(' '));
+      });
+    });
+    const [a, b] = band.dataset.range.split(',').map(Number);
+    Object.assign(band, { a, b, op: -1, k: -1, vis: null });
+  });
+
+  // hero geometry is measured on load and resize only, so scrolling never forces a layout read
+  let heroTop = 0, heroRange = 1;
+  function measureHero(){
+    heroTop = heroSec.getBoundingClientRect().top + scrollY;
+    heroRange = Math.max(1, heroSec.offsetHeight - innerHeight);
+  }
+  function heroProgress(){ return clamp((scrollY - heroTop) / heroRange, 0, 1); }
+  addEventListener('resize', () => { measureHero(); if (scrubOn) onScroll(); });
+
+  function updateCaptions(p){
+    bands.forEach((band, i) => {
+      const { a, b } = band;
+      const f = Math.min(0.02, (b - a) / 3);
+      let op = smooth(p, a, a + f) * (i === bands.length - 1 ? 1 : 1 - smooth(p, b - f, b));
+      const k = clamp((p - a) / Math.min(0.025, (b - a) * 0.35), 0, 1);
+      op = Math.round(op * 1000) / 1000;
+      if (op !== band.op) {
+        band.op = op; band.style.opacity = op;
+        const v = op > 0.01;
+        if (v !== band.vis) { band.vis = v; band.style.visibility = v ? 'visible' : 'hidden'; }
+      }
+      if (Math.abs(k - band.k) > 0.008 || (k !== band.k && (k === 0 || k === 1))) { band.k = k; band.style.setProperty('--k', k.toFixed(3)); }
+    });
+    const po = Math.round(smooth(p, PEEL_IN[0], PEEL_IN[1]) * 100) / 100;
+    if (po !== peelbg._o) { peelbg._o = po; peelbg.style.opacity = po; }
+    const late = p > 0.55;
+    if (late !== stage._late) { stage._late = late; stage.classList.toggle('late', late); }
+  }
+
+  // seek gating
+  let seekBusy = false, pendingTime = null, lastSeekT = -1;
+  function requestSeek(t){
+    if (!video.duration) return;
+    if (seekBusy) { pendingTime = t; return; }
+    if (Math.abs(t - lastSeekT) < 1 / 90) return;   // already showing this frame
+    seekBusy = true; lastSeekT = t; video.currentTime = t;
+  }
+  video.addEventListener('seeked', () => {
+    seekBusy = false;
+    if (pendingTime !== null) { const t = pendingTime; pendingTime = null; requestSeek(t); }
+  });
+  video.addEventListener('error', () => { seekBusy = false; pendingTime = null; failVideo(); });
+
+  // eased display time, a loop that rests
+  let target = 0, shown = 0, rafId = null, lastTick = 0, heroOnScreen = true;
+  function tick(now){
+    const dt = Math.min(100, now - (lastTick || now)); lastTick = now;
+    const k = 0.16;
+    shown += (target - shown) * (1 - Math.pow(1 - k, dt / 16.667));
+    let busy = Math.abs(target - shown) >= 0.0005;
+    if (!busy) shown = target;
+    requestSeek(shown * (video.duration || 0));
+    updateCaptions(shown);
+    if (busy) rafId = requestAnimationFrame(tick); else { rafId = null; lastTick = 0; }
+  }
+  function kick(){ if (rafId === null && heroOnScreen && scrubOn) rafId = requestAnimationFrame(tick); }
+  function onScroll(){ target = heroProgress(); kick(); }
+  new IntersectionObserver(es => {
+    heroOnScreen = es[0].isIntersecting;
+    document.body.classList.toggle('hero-on', heroOnScreen && scrubOn);   // rest the page's background loops behind the opaque stage
+    if (heroOnScreen) kick();
+  }).observe(heroSec);
+
+  // the drop, then the hand-over to the footage
+  function landed(){ stage.classList.add('landed'); kick(); }
+
+  // blob loader with an honest ring
+  let started = false;
+  function startBlobFetch(){ if (started) return; started = true; loadHeroBlob().catch(failVideo); }
+  async function loadHeroBlob(){
+    const ctrl = new AbortController();
+    let watchdog = setTimeout(() => ctrl.abort(), 20000);
+    const res = await fetch(VIDEO_URL, { priority: 'low', signal: ctrl.signal });
+    if (!res.ok || !res.body) throw new Error('video');
+    const total = Number(res.headers.get('Content-Length')) || VIDEO_BYTES;
+    const reader = res.body.getReader();
+    const chunks = []; let got = 0, lastRing = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      clearTimeout(watchdog); watchdog = setTimeout(() => ctrl.abort(), 20000);
+      chunks.push(value); got += value.length;
+      const frac = Math.min(1, got / total), now = performance.now();
+      if (now - lastRing > 100 || frac === 1) { lastRing = now; ring.style.setProperty('--ld', Math.round(126 * (1 - frac))); }
+    }
+    clearTimeout(watchdog);
+    ring.style.setProperty('--ld', 0);
+    video.src = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    video.load();
+    video.addEventListener('canplay', () => {
+      requestSeek(heroProgress() * video.duration);
+      const reveal = () => stage.classList.add('video-ready');
+      stage.classList.contains('landed') ? reveal() : setTimeout(reveal, 1500);
+    }, { once: true });
+  }
+  function failVideo(){ stage.classList.add('video-failed'); }
+
+  let heroInit = false;
+  function initHeroOnce(){
+    if (heroInit) return; heroInit = true;
+    posterEl.style.backgroundImage = "url('assets/hero-poster.jpg')";
+    endingEl.style.backgroundImage = "url('assets/hero-ending.jpg')";
+    const img = new Image();
+    img.onload = img.onerror = startBlobFetch;
+    img.src = 'assets/hero-poster.jpg';
+    setTimeout(startBlobFetch, 4000);
+    const dropper = stage.querySelector('.dropper');
+    dropper.addEventListener('animationend', landed, { once: true });
+    setTimeout(() => { if (!stage.classList.contains('landed')) landed(); }, 2200);
+  }
+
+  const GATES = [
+    '(max-width: 720px)',
+    '(orientation: portrait) and (max-width: 1024px)',
+    '(orientation: portrait) and (pointer: coarse)',
+    '(orientation: landscape) and (pointer: coarse) and (max-height: 560px)',
+    '(prefers-reduced-motion: reduce)'
+  ];
+  let scrubOn = false;
+  function enableScrub(){
+    if (scrubOn) return; scrubOn = true;
+    initHeroOnce();
+    measureHero();
+    addEventListener('scroll', onScroll, { passive: true });
+    bands.forEach(b => { b.op = -1; b.k = -1; b.vis = null; });
+    unpinFinalStates();
+    target = shown = heroProgress();
+    updateCaptions(shown);
+    document.body.classList.toggle('hero-on', heroOnScreen);
+    onScroll();
+  }
+  function disableScrub(){
+    if (!scrubOn) return; scrubOn = false;
+    document.body.classList.remove('hero-on');
+    removeEventListener('scroll', onScroll);
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+  function applyHeroMode(){ GATES.some(q => matchMedia(q).matches) ? disableScrub() : enableScrub(); }
+  const MQLS = GATES.map(q => matchMedia(q));
+  MQLS.forEach(m => m.addEventListener('change', applyHeroMode));
+
+  /* ================= the peel ribbon ================= */
+  const below = document.getElementById('below');
+  const ribbonPaths = [...document.querySelectorAll('#ribbon path')];
+  let ribbonPinned = false, lastDash = -1, ribbonRaf = null;
+  ribbonPaths.forEach(p => { p.style.strokeDasharray = '1000'; p.style.strokeDashoffset = '1000'; });
+  function drawRibbon(){
+    ribbonRaf = null;
+    if (ribbonPinned) return;
+    const r = below.getBoundingClientRect();
+    const p = clamp((innerHeight * 0.85 - r.top) / r.height, 0, 1);
+    const off = Math.round(1000 * (1 - p));
+    if (off !== lastDash) { lastDash = off; ribbonPaths.forEach(el => el.style.strokeDashoffset = off); }
+  }
+  addEventListener('scroll', () => { if (ribbonRaf === null) ribbonRaf = requestAnimationFrame(drawRibbon); }, { passive: true });
+  addEventListener('resize', () => { lastDash = -1; drawRibbon(); });
+
+  /* ================= shake the bottle ================= */
+  const bottleBtn = document.getElementById('bottle');
+  const bottleSvg = bottleBtn.querySelector('.bottle');
+  const listPanel = document.getElementById('listPanel');
+  const meter = listPanel.querySelector('.meter');
+  const hint = document.getElementById('shakeHint');
+  let p = 0, holding = false, done = false, shakeRaf = null, shakeLast = 0;
+  function setP(v){
+    p = v;
+    bottleSvg.style.setProperty('--p', p.toFixed(3));
+    bottleSvg.style.setProperty('--amp', (p * 7).toFixed(2));
+    meter.style.setProperty('--p', p.toFixed(3));
+  }
+  function shakeTick(now){
+    const dt = Math.min(64, now - (shakeLast || now)); shakeLast = now;
+    if (holding) setP(Math.min(1, p + dt / 1500));
+    else setP(Math.max(0, p - dt / 900));
+    if (p >= 1 && !done) return pop();
+    if (holding || p > 0) shakeRaf = requestAnimationFrame(shakeTick);
+    else { shakeRaf = null; shakeLast = 0; }
+  }
+  function startHold(e){
+    if (done) return;
+    if (e && e.type === 'pointerdown') bottleBtn.setPointerCapture(e.pointerId);
+    holding = true; bottleBtn.classList.add('holding');
+    if (shakeRaf === null) shakeRaf = requestAnimationFrame(shakeTick);
+  }
+  function endHold(){ holding = false; bottleBtn.classList.remove('holding'); }
+  function pop(){
+    done = true; holding = false; shakeRaf = null;
+    bottleBtn.classList.remove('holding');
+    setP(1);
+    listPanel.classList.add('popped', 'popped-perks');
+    hint.textContent = 'Pop! Now sign up below.';
+    setTimeout(() => listPanel.classList.add('settled'), 1400);
+  }
+  bottleBtn.addEventListener('pointerdown', startHold);
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => bottleBtn.addEventListener(t, endHold));
+  bottleBtn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startHold(); } });
+  bottleBtn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') endHold(); });
+  bottleBtn.addEventListener('contextmenu', e => e.preventDefault());
+
+  /* ================= reduced motion: pin and unpin ================= */
+  function pinToFinalStates(){
+    ribbonPinned = true; ribbonPaths.forEach(el => el.style.strokeDashoffset = 0);
+    if (!done) { done = true; setP(1); listPanel.classList.add('popped', 'popped-perks', 'settled'); hint.textContent = 'Popped. Sign up below.'; bottleBtn._pinned = true; }
+    document.querySelectorAll('.reveal').forEach(s => s.classList.add('in', 'settled'));
+  }
+  function unpinFinalStates(){
+    if (ribbonPinned) { ribbonPinned = false; lastDash = -1; drawRibbon(); }
+    if (bottleBtn._pinned) { bottleBtn._pinned = false; done = false; setP(0); listPanel.classList.remove('popped', 'popped-perks', 'settled'); hint.textContent = 'Press and hold to shake it up'; }
+  }
+  const RM = matchMedia('(prefers-reduced-motion: reduce)');
+  RM.addEventListener('change', e => { if (e.matches) pinToFinalStates(); else applyHeroMode(); });
+
+  /* ================= entrances + living loops ================= */
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if (en.isIntersecting) {
+      en.target.classList.add('in');
+      setTimeout(() => en.target.classList.add('settled'), 1300);
+      io.unobserve(en.target);
+    }
+  }), { threshold: 0.18 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  const liveIO = new IntersectionObserver(es => es.forEach(en => en.target.classList.toggle('off', !en.isIntersecting)));
+  document.querySelectorAll('.listen, .book').forEach(el => liveIO.observe(el));
+  document.addEventListener('visibilitychange', () => document.body.classList.toggle('paused', document.hidden));
+
+  /* ================= gigs ================= */
+  const gigbox = document.getElementById('gigbox');
+  if (upcoming.length) {
+    const ul = document.createElement('ul'); ul.className = 'giglist';
+    upcoming.forEach(g => {
+      const li = document.createElement('li');
+      const date = document.createElement('span'); date.className = 'date';
+      date.textContent = gigDate(g);
+      const venue = document.createElement('span'); venue.className = 'venue'; venue.textContent = g.venue;
+      const city = document.createElement('span'); city.className = 'city'; city.textContent = g.city; venue.appendChild(city);
+      const a = document.createElement('a'); a.className = 'btn'; a.href = g.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Tickets';
+      a.setAttribute('aria-label', 'Tickets for ' + g.venue + ', ' + date.textContent);
+      li.append(date, venue, a); ul.appendChild(li);
+    });
+    gigbox.appendChild(ul);
+  } else {
+    gigbox.innerHTML = '<div class="empty"><p>No new dates just yet. Join the list and you\'ll hear first.</p><a class="btn" href="#list">Join the list</a></div>';
+  }
+
+  /* ================= spotify, only on request ================= */
+  document.getElementById('loadPlayer').addEventListener('click', () => {
+    const box = document.getElementById('player');
+    box.innerHTML = '<iframe title="Fizzy Orange on Spotify" src="https://open.spotify.com/embed/artist/1hSt79a7e2OZzSD3pJgtCZ?utm_source=generator" allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
+  });
+
+  /* ================= mailing list ================= */
+  const form = document.getElementById('signup');
+  const box = document.getElementById('signupBox');
+  const success = document.getElementById('success');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = form.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { form.email.focus(); form.email.setCustomValidity('Please enter a valid email'); form.email.reportValidity(); return; }
+    form.email.setCustomValidity('');
+    if (FORM_ENDPOINT) {
+      try {
+        const r = await fetch(FORM_ENDPOINT, { method: 'POST', headers: { 'Accept': 'application/json' }, body: new FormData(form) });
+        if (!r.ok) throw 0;
+        success.textContent = "You're on the list. See you down the front.";
+      } catch (_) { success.textContent = "That didn't go through. Try again in a minute, or email " + BAND_EMAIL + '.'; }
+    } else {
+      location.href = 'mailto:' + BAND_EMAIL + '?subject=' + encodeURIComponent('Add me to the mailing list') + '&body=' + encodeURIComponent('Please add ' + email + ' to the Fizzy Orange mailing list.');
+      success.textContent = "Your email app should open now. Hit send and you're on the list.";
+    }
+    box.classList.add('sent');
+  });
+  form.email.addEventListener('input', () => form.email.setCustomValidity(''));
+
+  /* ================= go ================= */
+  applyHeroMode();
+  if (RM.matches) pinToFinalStates();
+  drawRibbon();
+})();
+</script>
+</body>
+</html>
