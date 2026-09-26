@@ -199,6 +199,7 @@ body.hero-on .env,body.hero-on .fizz i{animation-play-state:paused}
 .hero-static .line{font:600 1.1rem/1.45 var(--body);max-width:30ch;margin:0 auto}
 .hero-static .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(100%,460px);margin-top:10px}
 .hero-static .btns .btn{padding:.8em .6em;font-size:.95rem}
+@media (max-width:720px),(pointer:coarse) and (max-height:560px){.hero-static .btns{display:none}}   /* no buttons on phones */
 .hero-static::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;background:var(--peel) url("assets/peel.webp") center/cover;border-top:3px solid var(--ink)}
 
 /* the still hero: reduced motion, phones held sideways, and data-saver or very slow connections */
@@ -233,8 +234,8 @@ body.hero-on .env,body.hero-on .fizz i{animation-play-state:paused}
   .outlet .what{font-size:.72rem;margin-top:2px}
   .band.settle{inset:0}
   .settle .s-left,.settle .s-right{top:auto;transform:none;left:12px;right:12px;width:auto}
-  .settle .s-right{bottom:max(12px,env(safe-area-inset-bottom))}
-  .settle .s-left{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 116px)}
+  .settle .s-right{display:none}   /* no buttons on phones: the logo and tagline sit at the bottom */
+  .settle .s-left{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 24px)}
   .settle .s-left .logo{max-width:180px}
   .settle .s-left .chip{margin-top:10px!important;padding:10px 14px}
   .settle .s-left .chip p{font-size:.95rem}
