@@ -25,6 +25,8 @@ const I = {
   gig: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   press: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
   media: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/>',
+  grid: '<rect x="3" y="4" width="10" height="7" rx="1.5"/><rect x="15" y="4" width="6" height="7" rx="1.5"/><rect x="3" y="13" width="6" height="7" rx="1.5"/><rect x="11" y="13" width="10" height="7" rx="1.5"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>',
   text: '<path d="M4 6h16M4 12h16M4 18h10"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
@@ -56,7 +58,8 @@ async function toWebp(file, max) {
   const c = document.createElement("canvas");
   c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
   c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
-  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("Couldn't process that image."))), "image/webp", 0.82));
+  const blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("Couldn't process that image."))), "image/webp", 0.82));
+  return { blob, w: c.width, h: c.height };
 }
 const b64 = (blob) => new Promise((res, rej) => {
   const fr = new FileReader();
@@ -64,14 +67,17 @@ const b64 = (blob) => new Promise((res, rej) => {
   fr.onerror = () => rej(new Error("Couldn't read that file."));
   fr.readAsDataURL(blob);
 });
-async function upload(file) {
-  let blob = file, ext = (file.name.split(".").pop() ?? "").toLowerCase();
+/** Shrinks a photo in the browser, uploads it, and reports its address and size. */
+async function uploadImage(file) {
   if (!file.type.startsWith("image/")) throw new Error(`${file.name}: please choose an image.`);
-  if (file.type !== "image/gif") { blob = await toWebp(file, 2000); ext = "webp"; }
+  let blob = file, ext = (file.name.split(".").pop() ?? "").toLowerCase(), w = 0, h = 0;
+  if (file.type === "image/gif") { const bmp = await createImageBitmap(file); w = bmp.width; h = bmp.height; }
+  else { ({ blob, w, h } = await toWebp(file, 2000)); ext = "webp"; }
   const r = await call(`/api/cms/upload?ext=${ext}`, { method: "POST", body: await b64(blob) });
   previews.set(r.url, URL.createObjectURL(blob));
-  return r.url;
+  return { url: r.url, w, h };
 }
+const upload = async (file) => (await uploadImage(file)).url;
 const uid = () => crypto.randomUUID();
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date());
 const longDate = (d) => new Intl.DateTimeFormat("en-IE", { weekday: "short", day: "numeric", month: "long", year: "numeric" }).format(new Date(d + "T12:00:00"));
@@ -146,7 +152,7 @@ function ImagePicker(label, hint, value, onChange) {
 /* ================= shell ================= */
 const NAV = [
   ["#/", "Home", I.home], ["#/gigs", "Gigs", I.gig], ["#/press", "Press", I.press],
-  ["#/photos", "Band photos", I.media], ["#/text", "Website text", I.text], ["#/list", "Mailing list", I.mail],
+  ["#/photos", "Band photos", I.media], ["#/gallery", "Gallery", I.grid], ["#/text", "Website text", I.text], ["#/list", "Mailing list", I.mail],
 ];
 const LOGO = "/assets/orange-happy.webp";
 
@@ -180,6 +186,7 @@ function route() {
   if (section === "gigs") view = id ? GigForm(id) : GigsList();
   else if (section === "press") view = id ? PressForm(id) : PressList();
   else if (section === "photos") view = PhotosPanel();
+  else if (section === "gallery") view = GalleryPanel();
   else if (section === "text") view = SettingsPanel();
   else if (section === "list") view = SubscribersPanel();
   else view = Overview();
@@ -203,12 +210,13 @@ function Overview() {
   if (noTickets) jobs.push(`${noTickets} upcoming ${noTickets === 1 ? "gig has" : "gigs have"} no ticket link yet, so the button sends people to the mailing list.`);
   if (press.length < 3) jobs.push("The scroll section shows three press articles. Add another under Press to fill it.");
   if (!files.settings.data.release_url) jobs.push("The latest release has no Spotify link, so its button is hidden. Add one under Website text.");
+  if (next && !next.poster) jobs.push(`Your next gig at ${next.venue} has no poster yet. Add one so it stands out at the top of the site.`);
 
   return h("div", null,
     Head("Home", `Everything you change here appears on ${SITE} about a minute after you save.`,
       h("a", { class: "a-btn a-btn--primary", href: "#/gigs/new" }, icon(I.plus), "Add a gig")),
     h("div", { class: "a-stats" },
-      [[upcoming.length, "Upcoming gigs"], [gigs.length, "Gigs in total"], [press.length, "Press articles"], [files.photos.data.length, "Band photos"]]
+      [[upcoming.length, "Upcoming gigs"], [gigs.length, "Gigs in total"], [press.length, "Press articles"], [files.gallery.data.length, "Gallery photos"]]
         .map(([n, l]) => h("div", { class: "a-stat" }, h("b", null, n), h("span", null, l)))),
     next && h("section", { class: "a-card" }, h("div", { class: "a-card__head" }, h("h2", null, "Next up")),
       h("div", { class: "a-card__body" },
@@ -237,7 +245,7 @@ function GigsList() {
       ? Empty("No gigs yet", "Add your next date and it will appear in the scroll section and the gigs list on the website.", h("a", { class: "a-btn a-btn--primary", href: "#/gigs/new" }, icon(I.plus), "Add a gig"))
       : !rows.length ? Empty("Nothing matches", "Try a different search or filter.")
       : h("div", { class: "a-rows" }, rows.map((g) => h("a", { class: "a-row", href: `#/gigs/${g.id}` },
-        h("span", { class: "a-row__img a-row__img--ph" }, g.date.slice(8, 10)),
+        g.poster ? h("img", { class: "a-row__img", src: src(g.poster), alt: "", style: { objectFit: "cover" } }) : h("span", { class: "a-row__img a-row__img--ph" }, g.date.slice(8, 10)),
         h("span", null, h("span", { class: "a-row__t" }, [g.venue, g.city].filter(Boolean).join(", ")), h("span", { class: "a-row__s" }, longDate(g.date))),
         h("span", { class: "a-row__end" },
           g.published === false && h("span", { class: "a-tag a-tag--off" }, "Hidden"),
@@ -258,7 +266,7 @@ function GigsList() {
 function GigForm(id) {
   const existing = files.gigs.data.find((g) => g.id === id);
   if (id !== "new" && !existing) return Empty("That gig is gone", "It may have been deleted from another device.", h("a", { class: "a-btn", href: "#/gigs" }, "Back to gigs"));
-  const g = { id: uid(), date: "", venue: "", city: "Dublin", url: "", soldOut: false, published: true, ...(existing ?? {}) };
+  const g = { id: uid(), date: "", venue: "", city: "Dublin", url: "", poster: "", soldOut: false, published: true, ...(existing ?? {}) };
   const bar = SaveBar(onSave);
   const text = (k, attrs = {}) => h("input", { value: g[k] ?? "", ...attrs, onInput: (e) => { g[k] = e.target.value; bar.dirty(true); } });
 
@@ -289,6 +297,8 @@ function GigForm(id) {
           Field("Date", text("date", { type: "date", required: true })),
           Field("Venue", text("venue", { placeholder: "e.g. Whelan's", required: true })),
           Field("City", text("city", { placeholder: "Dublin" })))),
+      Card("Poster", "Event posters are A4 portrait. The poster sits next to the gig on the website, and the next gig's poster is shown at the top of the site.",
+        ImagePicker("Event poster", "A photo or export of the A4 poster. It's resized for the web automatically.", g.poster, (v) => { g.poster = v; bar.dirty(true); })),
       Card("Tickets", null,
         Field("Ticket link", text("url", { type: "url", placeholder: "https://dice.fm/..." }), "Paste the DICE, Ticketmaster or venue page. Leave blank and the button sends people to the mailing list."),
         check("Sold out", "Shows \"Sold out\" instead of the ticket button.", g.soldOut, (v) => { g.soldOut = v; bar.dirty(true); }),
@@ -390,14 +400,70 @@ function PhotosPanel() {
   return h("div", null, Head("Band photos", "The photos in the band section. Three looks best. They're resized for you when you upload."), grid, bar.el);
 }
 
+/* ================= gallery ================= */
+function GalleryPanel() {
+  let list = files.gallery.data.map((p) => ({ ...p }));
+  const bar = SaveBar(onSave);
+  const tiles = h("div", { class: "a-form" });
+  const status = h("p", { class: "a-note", hidden: true });
+  const touch = () => bar.dirty(true);
+
+  async function addFiles(fileList) {
+    const picked = [...fileList].filter((f) => f.type.startsWith("image/"));
+    if (!picked.length) return show("Choose photos (JPG, PNG, WebP or GIF).", "err");
+    let done = 0, failed = 0;
+    status.hidden = false;
+    for (const f of picked) {
+      status.textContent = `Uploading ${done + failed + 1} of ${picked.length}… Keep this page open.`;
+      try { const r = await uploadImage(f); list.push({ id: uid(), url: r.url, w: r.w, h: r.h, caption: "", alt: "" }); done++; touch(); draw(); }
+      catch (x) { failed++; show(x.message, "err"); }
+    }
+    status.textContent = `${done} ${done === 1 ? "photo" : "photos"} added${failed ? `, ${failed} didn't upload` : ""}. Add captions if you like, then press Save changes.`;
+  }
+  const many = h("input", { type: "file", accept: "image/*", multiple: true, hidden: true, onChange: (e) => { addFiles(e.target.files); e.target.value = ""; } });
+  const one = h("input", { type: "file", accept: "image/*", hidden: true, onChange: (e) => { addFiles(e.target.files); e.target.value = ""; } });
+  const drop = h("div", { class: "a-drop", tabIndex: 0,
+    onDragover: (e) => { e.preventDefault(); drop.setAttribute("data-over", ""); },
+    onDragleave: () => drop.removeAttribute("data-over"),
+    onDrop: (e) => { e.preventDefault(); drop.removeAttribute("data-over"); addFiles(e.dataTransfer.files); } },
+    icon(I.upload), h("strong", null, "Drag photos here"), h("span", null, "or choose several at once. They're resized for the web as they upload."),
+    h("div", { class: "a-actions", style: { justifyContent: "center" } },
+      h("label", { class: "a-btn a-btn--primary", style: { cursor: "pointer" } }, icon(I.plus), "Choose photos", many),
+      h("label", { class: "a-btn", style: { cursor: "pointer" } }, "Add one photo", one)));
+
+  const draw = () => {
+    tiles.replaceChildren(...(!list.length ? [Empty("No photos yet", "Add some above and they'll appear in the Gallery section at the bottom of the website.")] : [
+      h("div", { class: "a-tiles" }, list.map((p, i) => h("div", { class: "a-tile" },
+        h("div", { class: "a-tile__prev", style: { aspectRatio: p.w && p.h ? `${p.w} / ${p.h}` : "4 / 3", maxHeight: "220px" } },
+          h("img", { src: src(p.url), alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } })),
+        h("div", { class: "a-tile__body" },
+          Field("Caption", h("input", { value: p.caption ?? "", placeholder: "Optional", onInput: (e) => { p.caption = e.target.value; touch(); } })),
+          Field("Description", h("input", { value: p.alt ?? "", placeholder: "What's in the photo", onInput: (e) => { p.alt = e.target.value; touch(); } }), "For screen readers and Google."),
+          h("div", { class: "a-actions" },
+            i > 0 && h("button", { type: "button", class: "a-btn a-btn--sm", "aria-label": "Move earlier", onClick: () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; touch(); draw(); } }, "←"),
+            i < list.length - 1 && h("button", { type: "button", class: "a-btn a-btn--sm", "aria-label": "Move later", onClick: () => { [list[i + 1], list[i]] = [list[i], list[i + 1]]; touch(); draw(); } }, "→"),
+            h("button", { type: "button", class: "a-btn a-btn--danger a-btn--sm", onClick: () => { if (confirm("Remove this photo from the gallery?")) { list.splice(i, 1); touch(); draw(); } } }, "Remove"))))))]));
+  };
+  async function onSave() {
+    bar.busy(true);
+    try { await save("gallery", list.map((p) => ({ ...p, caption: (p.caption || "").trim(), alt: (p.alt || "").trim() })), `update gallery (${list.length} photos)`); bar.dirty(false); show(LIVE); }
+    catch (x) { show(x.message, "err"); } finally { bar.busy(false); }
+  }
+  draw();
+  return h("div", null,
+    Head("Gallery", "The photo grid at the bottom of the website. Each photo keeps its own shape, and the grid arranges itself around them."),
+    Card(null, null, drop, status),
+    tiles, bar.el);
+}
+
 /* ================= website text ================= */
 const TEXT = [
   ["Top of the page", null, [["kicker", "Small line above the logo", "Shown on phones held sideways and for visitors who turn animations off."], ["tagline", "Tagline", "Under the logo at the end of the scroll animation."], ["gigs_hero_line", "Gig box when there are no dates", "When a gig is added, this is replaced by the next date automatically."]]],
-  ["Latest release", "The Spotify box in the scroll animation and the card in the Listen section.", [["release_title", "Title"], ["release_line", "One line about it"], ["release_url", "Spotify link", "Leave blank to hide the button."]]],
-  ["Section intros", null, [["gigs_intro", "Gigs"], ["gigs_empty", "Gigs, when there are no dates"], ["listen_intro", "Listen", null, true], ["band_intro", "The band", null, true], ["band_members", "Band members", "Separate names with commas."], ["list_intro", "Mailing list"], ["book_intro", "Bookings"]]],
+  ["Latest release", "Your newest album or single. It fills the Spotify box in the scroll animation and the whole Listen section, including the player.", [["release_title", "Title"], ["release_line", "One line about it", "Used in the scroll animation."], ["release_url", "Spotify link", "The album or single's Spotify page. The player on the site plays this."], ["release_apple", "Apple Music link", "Leave blank to use your Apple Music artist page."], ["release_bandcamp", "Bandcamp link", "Leave blank to use your Bandcamp page."], ["release_tracks", "Tracklist", "One song per line, with the length after a bar, e.g.  Old Dog | 3:24", true]]],
+  ["Section intros", null, [["gigs_intro", "Gigs"], ["gigs_empty", "Gigs, when there are no dates"], ["listen_intro", "Listen", null, true], ["band_intro", "The band", null, true], ["band_members", "Band members", "Separate names with commas."], ["list_intro", "Mailing list"], ["book_intro", "Bookings"], ["gallery_intro", "Gallery"]]],
   ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
 ];
-const LINKS = ["release_url", "instagram", "spotify", "apple_music", "bandcamp", "youtube", "tiktok"];
+const LINKS = ["release_url", "release_apple", "release_bandcamp", "instagram", "spotify", "apple_music", "bandcamp", "youtube", "tiktok"];
 
 function SettingsPanel() {
   const f = { ...files.settings.data };

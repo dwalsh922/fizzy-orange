@@ -28,6 +28,8 @@
   --accent:#F07A2A;       /* the four action buttons */
   --accent-hover:#F79450;
   --accent-muted:rgba(240,122,42,.22);
+  --accent-deep:#C9500C;  /* orange surfaces with text: white text is 4.5:1 on it */
+  --accent-deep-hover:#A8430A;
   --leaf:#5F9A4B;
   --pith:#F8EBD3;
   --text-primary:#1F1A18; /* the logo's ink */
@@ -64,10 +66,10 @@ a{color:inherit}
 @keyframes rise{from{transform:translateY(0)}to{transform:translateY(-115vh)}}
 
 /* ---------- buttons ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;font:800 1rem/1.1 var(--body);letter-spacing:.01em;text-decoration:none;color:var(--ink);background:var(--accent);border:3px solid var(--ink);border-radius:15px;padding:.85em 1.25em;box-shadow:4px 4px 0 var(--ink);cursor:pointer;transition:transform .25s var(--ease-out),box-shadow .25s var(--ease-out),background-color .25s var(--ease-out)}
-.btn:hover{background:var(--accent-hover);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;font:800 1rem/1.1 var(--body);letter-spacing:.01em;text-decoration:none;color:#fff;background:var(--accent-deep);border:3px solid var(--ink);border-radius:15px;padding:.85em 1.25em;box-shadow:4px 4px 0 var(--ink);cursor:pointer;transition:transform .25s var(--ease-out),box-shadow .25s var(--ease-out),background-color .25s var(--ease-out)}
+.btn:hover{background:var(--accent-deep-hover);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
 .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
-.btn.ghost{background:var(--panel)}
+.btn.ghost{background:var(--panel);color:var(--ink)}
 .btn.ghost:hover{background:#fff}
 @media (pointer:coarse){.btn{min-height:44px}}
 
@@ -76,7 +78,7 @@ a{color:inherit}
 .nav .brand{display:block;width:clamp(86px,9vw,120px)}
 .nav ul{display:flex;gap:clamp(4px,1.4vw,22px);list-style:none;margin:0;padding:0}
 .nav a.link{font:500 .82rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:10px 8px;border-radius:15px;display:inline-flex;align-items:center;min-height:40px;transition:background-color .25s var(--ease-out)}
-.nav a.link:hover{background:var(--accent-muted)}
+.nav a.link:hover{background:rgba(31,26,24,.08)}
 .nav .short{display:none}
 @media (max-width:560px){.nav .long{display:none}.nav .short{display:inline}.nav a.link{font-size:.74rem;padding:8px 6px}}
 
@@ -145,6 +147,60 @@ a{color:inherit}
 .outlet:hover .what{color:var(--ink)}
 .outlet:hover .what span{transform:translateX(5px)}
 body.hero-on .env,body.hero-on .fizz i{animation-play-state:paused}
+
+/* the next-gig card in the scroll animation: flagged, with its A4 poster */
+.chip.gigcard{box-shadow:7px 7px 0 var(--accent-deep)}
+.gig-flag{display:inline-flex;align-items:center;gap:8px;margin:0 0 10px;padding:7px 12px;border:2px solid var(--ink);border-radius:999px;background:var(--accent-deep);color:#fff;font:500 .74rem/1 var(--mono);text-transform:uppercase;letter-spacing:.1em}
+.gig-flag .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blip 1.6s ease-in-out infinite}
+@keyframes blip{50%{opacity:.25;transform:scale(.7)}}
+.band.band-gig{width:min(calc(var(--lane) + 120px),580px)}  /* wider than the caption lane: the peel behind it is only background here */
+.gig-body{display:grid;grid-template-columns:42% 1fr;gap:18px;align-items:start;margin-top:14px}
+.gig-body.noposter{grid-template-columns:1fr}
+.gig-body .gig-poster{width:100%;aspect-ratio:210/297;object-fit:cover;border:3px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink);transform:rotate(-2deg)}
+.gig-date{margin:0;font:400 clamp(1.7rem,2.5vw,2.5rem)/1 var(--display)}
+.gig-where{margin:.4em 0 0;font:700 clamp(1rem,1.1vw,1.15rem)/1.3 var(--body)}
+.gigcard .chip-cta{margin-top:14px}
+.gig-more{display:inline-block;margin-top:10px;font:500 .78rem/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+
+/* the rest of the upcoming gigs: poster cards in date order */
+.gig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:20px}
+.gig{display:flex;flex-direction:column;background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);overflow:hidden}
+.gig .gig-poster{display:block;width:100%;aspect-ratio:210/297;object-fit:cover;border-bottom:3px solid var(--ink);background:#fff}
+.gig .gig-poster.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--panel) url("assets/orange-happy.webp") center 18%/42% no-repeat}
+.gig .gig-poster.ph b{margin-top:38%;font:400 3.4rem/1 var(--display)}
+.gig .gig-poster.ph span{font:500 .9rem/1 var(--mono);text-transform:uppercase;letter-spacing:.12em}
+.gig-text{display:flex;flex-direction:column;gap:4px;padding:14px 16px 16px}
+.gig-text .date{margin:0;font:500 .82rem/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary)}
+.gig-text h3{margin:0;font:800 1.15rem/1.25 var(--body)}
+.gig-text .city{margin:0 0 10px;color:var(--text-secondary)}
+.gig-text .btn{margin-top:auto;align-self:flex-start}
+@media (max-width:600px){
+  .gig{flex-direction:row}
+  .gig .gig-poster{width:36%;flex:0 0 36%;border-bottom:0;border-right:3px solid var(--ink)}
+  .gig .gig-poster.ph b{margin-top:48%;font-size:2.2rem}
+  .gig-text{padding:12px 14px}
+}
+
+/* gallery: a justified grid, every photo at its own shape */
+.gallery .panel{--rh:230px}
+.jgrid{display:flex;flex-wrap:wrap;gap:12px}
+.jgrid::after{content:"";flex-grow:1000000}
+.jgrid a{position:relative;display:block;flex-grow:calc(var(--ar,1) * 100);flex-basis:calc(var(--ar,1) * var(--rh));border:3px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--paper)}
+.jgrid a i{display:block;padding-bottom:calc(100% / var(--ar,1))}
+.jgrid img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease-out)}
+.jgrid a:hover img{transform:scale(1.04)}
+@media (max-width:720px){.gallery .panel{--rh:130px}.jgrid{gap:8px}.jgrid a{border-width:2px;border-radius:9px}}
+.lightbox{max-width:100vw;max-height:100vh;width:100vw;height:100vh;margin:0;padding:0;border:0;background:rgba(20,16,14,.94)}
+.lightbox::backdrop{background:rgba(20,16,14,.6)}
+.lightbox[open]{display:flex;align-items:center;justify-content:center}
+.lightbox figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:min(92vw,1400px)}
+.lightbox img{max-width:100%;max-height:82vh;object-fit:contain;border:3px solid var(--paper);border-radius:8px}
+.lightbox figcaption{color:var(--paper);font:500 .9rem/1.3 var(--mono);text-align:center}
+.lb-btn{position:absolute;width:48px;height:48px;border:2px solid var(--paper);border-radius:15px;background:rgba(20,16,14,.6);color:var(--paper);font:700 1.2rem/1 var(--body);cursor:pointer}
+.lb-btn:hover{background:var(--paper);color:var(--ink)}
+.lb-close{top:16px;right:16px}
+.lb-prev{left:16px;top:50%;transform:translateY(-50%)}
+.lb-next{right:16px;top:50%;transform:translateY(-50%)}
 @media (max-height:620px){.band h2{font-size:clamp(1.5rem,2.4vw,2.4rem)}.settle .btns{gap:8px}.settle .btns .btn{padding:.6em 1em}}
 
 /* ---------- hero: static (phones, portrait tablets, reduced motion) ---------- */
@@ -194,6 +250,14 @@ body.hero-on .env,body.hero-on .fizz i{animation-play-state:paused}
   .settle .btns{grid-template-columns:1fr 1fr;gap:8px}
   .settle .btns .btn{padding:.7em .8em;font-size:.88rem;justify-content:center}
   .settle .btns .btn span{display:none}
+  .gig-flag{margin-bottom:6px;padding:5px 10px;font-size:.66rem}
+  .gig-body{gap:12px;margin-top:8px}
+  .gig-body{grid-template-columns:78px 1fr}
+  .gig-body .gig-poster{border-width:2px;box-shadow:3px 3px 0 var(--ink)}
+  .gig-date{font-size:1.45rem}
+  .gig-where{font-size:.92rem;margin-top:.25em}
+  .gigcard .chip-cta{margin-top:8px}
+  .gig-more{margin-top:6px}
 }
 
 /* ---------- below the hero ---------- */
@@ -280,7 +344,7 @@ h2.big{font:400 clamp(2.4rem,5.6vw,4.6rem)/1 var(--display);margin:0 0 .3em}
 .members{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-wrap:wrap;gap:8px}
 .members li{font:600 .95rem/1 var(--body);border:2px solid var(--ink);border-radius:999px;padding:9px 13px;background:var(--paper)}
 .quotes{display:grid;gap:14px}
-blockquote{margin:0;background:var(--accent);border:3px solid var(--ink);border-radius:18px;padding:18px 20px;box-shadow:5px 5px 0 var(--ink)}
+blockquote{margin:0;background:var(--accent-deep);color:#fff;border:3px solid var(--ink);border-radius:18px;padding:18px 20px;box-shadow:5px 5px 0 var(--ink)}
 blockquote p{margin:0;font:400 1.45rem/1.15 var(--display)}
 blockquote cite{display:block;margin-top:8px;font:500 .78rem/1.2 var(--mono);font-style:normal;text-transform:uppercase;letter-spacing:.08em}
 a.quote{text-decoration:none;display:block}
@@ -329,9 +393,10 @@ form.signup{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
 @media (max-width:860px){.list .panel{grid-template-columns:1fr}}
 
 /* book */
-.book .panel{position:relative;background:var(--accent);overflow:hidden}
+.book .panel{position:relative;background:var(--accent-deep);color:#fff;overflow:hidden}
 .book .inner{position:relative;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:end}
-.book .lede{color:var(--ink)}
+.book .lede{color:#fff}
+.book .facts li,.book .mailbox{color:var(--ink)}
 .facts{list-style:none;margin:0 0 24px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .facts li{font:500 .82rem/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;background:var(--panel);border:2px solid var(--ink);border-radius:999px;padding:10px 12px}
 .book .mailbox{background:var(--panel);border:3px solid var(--ink);border-radius:18px;padding:22px;box-shadow:6px 6px 0 var(--ink)}
@@ -400,12 +465,20 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
       <div class="frame" aria-hidden="true"><img class="dropper" src="assets/orange-happy.webp" alt="" width="900" height="900"></div>
       <svg class="ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-opacity=".2" stroke-width="3"/><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="126" style="stroke-dashoffset:var(--ld,126)"/></svg>
 
-      <div class="band right" data-range="0.10,0.30" data-fx="unpeel">
-        <div class="chip">
-          <p class="kicker">Live</p>
-          <h2 data-split>Catch us live.</h2>
-          <p class="line" data-split="words" id="heroGigLine"><!--t:gigs_hero_line-->New dates are on the way. Join the list and hear first.<!--/t--></p>
-          <div class="chip-cta"><a class="btn" id="heroGigBtn" href="#gigs">Gigs and tickets <span aria-hidden="true">→</span></a></div>
+      <div class="band right band-gig" data-range="0.10,0.30" data-fx="unpeel">
+        <div class="chip gigcard">
+          <p class="gig-flag"><span class="dot" aria-hidden="true"></span><span id="heroGigFlag">Dates coming soon</span></p>
+          <h2 data-split>Upcoming Gigs</h2>
+          <div class="gig-body noposter" id="heroGigBody">
+            <img class="gig-poster" id="heroGigPoster" alt="" hidden>
+            <div class="gig-info">
+              <p class="gig-date" id="heroGigDate" hidden></p>
+              <p class="gig-where" id="heroGigWhere" hidden></p>
+              <p class="line" id="heroGigLine"><!--t:gigs_hero_line-->New dates are on the way. Join the list and hear first.<!--/t--></p>
+              <div class="chip-cta"><a class="btn" id="heroGigBtn" href="#list">Join the list <span aria-hidden="true">→</span></a></div>
+              <a class="gig-more" id="heroGigMore" href="#gigs" hidden></a>
+            </div>
+          </div>
         </div>
       </div>
       <div class="band left" data-range="0.35,0.56" data-fx="shiver">
@@ -487,7 +560,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           </a>
           <a class="door rv" href="#listen">
             <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#1F1A18"/><circle cx="32" cy="32" r="19" fill="none" stroke="#4a403a" stroke-width="2"/><circle cx="32" cy="32" r="10" fill="#F07A2A" stroke="#1F1A18" stroke-width="3"/><circle cx="32" cy="32" r="2.5" fill="#1F1A18"/></svg>
-            <h3>Hear the record.</h3><p>In Mono, on every app.</p><span class="go">Listen <span aria-hidden="true">→</span></span>
+            <h3>Hear the record.</h3><p><!--t:release_title-->Old Ones<!--/t-->, on every app.</p><span class="go">Listen <span aria-hidden="true">→</span></span>
           </a>
           <a class="door rv" href="#list">
             <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="14" width="52" height="36" rx="5" fill="#F8EBD3" stroke="#1F1A18" stroke-width="3.5"/><path d="M8 17l24 19 24-19" fill="none" stroke="#1F1A18" stroke-width="3.5" stroke-linejoin="round"/><circle cx="50" cy="16" r="8" fill="#F07A2A" stroke="#1F1A18" stroke-width="3"/></svg>
@@ -521,36 +594,27 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="panel">
           <div class="record rv" id="record">
             <div class="disc spin" aria-hidden="true"></div>
-            <img src="assets/in-mono.jpg" alt="The In Mono cover: the six band members in black and white, looking up, under the words Fizzy Orange In Mono" width="1000" height="1000" loading="lazy">
+            <img src="assets/old-ones.jpg" data-src="release_cover" alt="The album cover" width="1000" height="1000" loading="lazy">
           </div>
           <div class="rv">
             <span class="label">Listen</span>
-            <h2 class="big" id="listen-h">In Mono.</h2>
-            <p class="lede"><!--t:listen_intro-->Our debut EP, now in a deluxe edition with three songs nobody's heard yet. Cut at Sonic Studios and mixed in mono, the old way.<!--/t--></p>
-            <ol class="tracks">
-              <li><span class="n">01</span>Rita<span class="t">2:49</span></li>
-              <li><span class="n">02</span>By The Bay<span class="t">2:46</span></li>
-              <li><span class="n">03</span>Chelsea Bakery<span class="t">2:57</span></li>
-              <li><span class="n">04</span>It Hurts Me Too<span class="t">1:54</span></li>
-              <li><span class="n">05</span>CHOO CHOO<span class="t">5:37</span></li>
-              <li><span class="n">06</span>Good Time<span class="t">2:18</span></li>
-              <li><span class="n">07</span>Italian Momma <em>New</em><span class="t">2:34</span></li>
-              <li><span class="n">08</span>Walking Home With You <em>New</em><span class="t">2:33</span></li>
-              <li><span class="n">09</span>Something is Wrong <em>New</em><span class="t">2:04</span></li>
-            </ol>
+            <h2 class="big" id="listen-h"><!--t:release_title-->Old Ones<!--/t-->.</h2>
+            <p class="lede"><!--t:listen_intro-->Our latest album: eight songs, all on real gear, out now wherever you listen.<!--/t--></p>
+            <ol class="tracks"><!--b:tracks-->
+              <li><span class="n">01</span>Do You Still Love Me?<span class="t">3:55</span></li>
+              <li><span class="n">02</span>Fourstep<span class="t">2:10</span></li>
+              <li><span class="n">03</span>Bus to Jersey<span class="t">2:42</span></li>
+              <li><span class="n">04</span>Good Morning Farmer!<span class="t">3:46</span></li>
+              <li><span class="n">05</span>Old Dog<span class="t">3:24</span></li>
+              <li><span class="n">06</span>Fools Live for Free<span class="t">2:34</span></li>
+              <li><span class="n">07</span>Seabed<span class="t">3:11</span></li>
+              <li><span class="n">08</span>Smoke Only Rises (Not Without Fire)<span class="t">3:04</span></li>
+            <!--/b--></ol>
             <div class="platforms">
-              <a class="btn" href="https://open.spotify.com/artist/1hSt79a7e2OZzSD3pJgtCZ" data-href="spotify" target="_blank" rel="noopener">Spotify</a>
-              <a class="btn ghost" href="https://music.apple.com/ie/artist/fizzy-orange/1522993197" data-href="apple_music" target="_blank" rel="noopener">Apple Music</a>
-              <a class="btn ghost" href="https://fizzyorange.bandcamp.com/album/in-mono-deluxe" data-href="bandcamp" target="_blank" rel="noopener">Bandcamp</a>
+              <a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" data-href="release_url" target="_blank" rel="noopener">Spotify</a>
+              <a class="btn ghost" href="https://music.apple.com/ie/album/old-ones/1815322646" data-href="release_apple" target="_blank" rel="noopener">Apple Music</a>
+              <a class="btn ghost" href="https://fizzyorange.bandcamp.com/album/old-ones" data-href="release_bandcamp" target="_blank" rel="noopener">Bandcamp</a>
               <a class="btn ghost" href="https://www.youtube.com/@fizzyorange5703" data-href="youtube" target="_blank" rel="noopener">YouTube</a>
-            </div>
-            <div class="latest">
-              <img src="assets/old-ones.jpg" data-src="release_cover" alt="The Old Ones cover" width="480" height="480" loading="lazy">
-              <div>
-                <p class="kicker">Newest on Spotify</p>
-                <p><!--t:release_title-->Old Ones<!--/t-->. <!--t:release_line-->Our latest record. Eight songs, all on real gear.<!--/t--></p>
-                <a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" data-href="release_url" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a>
-              </div>
             </div>
             <div class="player" id="player">
               <p>Nothing plays until you press play.</p>
@@ -669,8 +733,33 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         </div>
       </div>
     </section>
+
+    <!-- gallery -->
+    <!--b:gallery_section--><section class="sec gallery reveal" id="gallery" aria-labelledby="gallery-h">
+      <div class="wrap">
+        <div class="panel">
+          <div class="rv">
+            <span class="label">Gallery</span>
+            <h2 class="big" id="gallery-h">Gallery.</h2>
+            <p class="lede">Nights out, studio days and everything in between.</p>
+          </div>
+          <div class="jgrid rv">
+            <a href="/assets/band-studio.jpg" style="--ar:0.8333" data-caption="The studio, Dublin"><i></i><img src="/assets/band-studio.jpg" alt="The six members of Fizzy Orange in their home studio" loading="lazy"></a>
+            <a href="/assets/band-rooftop.jpg" style="--ar:1" data-caption="Golden hour"><i></i><img src="/assets/band-rooftop.jpg" alt="The band grinning together on a sunny rooftop" loading="lazy"></a>
+            <a href="/assets/band-arch.jpg" style="--ar:1" data-caption="In mono, obviously"><i></i><img src="/assets/band-arch.jpg" alt="The band in black and white under a stone archway" loading="lazy"></a>
+          </div>
+        </div>
+      </div>
+    </section><!--/b-->
   </div>
 </main>
+
+<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+  <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+  <button type="button" class="lb-btn lb-close" id="lbClose" aria-label="Close">✕</button>
+  <button type="button" class="lb-btn lb-prev" id="lbPrev" aria-label="Previous photo">←</button>
+  <button type="button" class="lb-btn lb-next" id="lbNext" aria-label="Next photo">→</button>
+</dialog>
 
 <footer>
   <div class="wrap">
@@ -724,12 +813,27 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const upcoming = GIGS.filter(g => new Date(g.date + 'T23:59:59') >= today).sort((x, y) => x.date.localeCompare(y.date));
   const gigDate = g => new Date(g.date + 'T12:00:00').toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
+  const where = g => [g.venue, g.city].filter(Boolean).join(', ');
   if (upcoming.length) {
     const g = upcoming[0];
-    document.getElementById('heroGigLine').textContent = 'Next up: ' + gigDate(g) + ', ' + g.venue + ', ' + g.city + '.';
+    const d = new Date(g.date + 'T12:00:00');
+    document.getElementById('heroGigFlag').textContent = 'Next gig';
+    const date = document.getElementById('heroGigDate');
+    date.textContent = d.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' }); date.hidden = false;
+    const w = document.getElementById('heroGigWhere'); w.textContent = where(g); w.hidden = false;
+    document.getElementById('heroGigLine').hidden = true;
+    if (g.poster) {
+      const img = document.getElementById('heroGigPoster');
+      img.src = g.poster; img.alt = 'Poster for Fizzy Orange at ' + where(g) + ', ' + date.textContent; img.hidden = false;
+      document.getElementById('heroGigBody').classList.remove('noposter');
+    }
     const btn = document.getElementById('heroGigBtn');
-    btn.href = g.url; btn.target = '_blank'; btn.rel = 'noopener';
-    btn.firstChild.textContent = g.soldOut ? 'Sold out ' : 'Get tickets ';
+    if (g.url && !g.soldOut) { btn.href = g.url; btn.target = '_blank'; btn.rel = 'noopener'; btn.firstChild.textContent = 'Get tickets '; }
+    else { btn.href = '#list'; btn.firstChild.textContent = g.soldOut ? 'Sold out: join the list ' : 'Join the list '; }
+    if (upcoming.length > 1) {
+      const more = document.getElementById('heroGigMore');
+      more.textContent = '+ ' + (upcoming.length - 1) + ' more ' + (upcoming.length === 2 ? 'date' : 'dates') + ' below'; more.hidden = false;
+    }
   }
 
   // split headlines into words and characters, once
@@ -1032,22 +1136,40 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
   /* ================= gigs ================= */
   const gigbox = document.getElementById('gigbox');
-  if (upcoming.length) {
-    const ul = document.createElement('ul'); ul.className = 'giglist';
-    upcoming.forEach(g => {
-      const li = document.createElement('li');
-      const date = document.createElement('span'); date.className = 'date';
-      date.textContent = gigDate(g);
-      const venue = document.createElement('span'); venue.className = 'venue'; venue.textContent = g.venue;
-      const city = document.createElement('span'); city.className = 'city'; city.textContent = g.city; venue.appendChild(city);
-      const a = document.createElement('a'); a.className = 'btn'; a.href = g.url || '#list'; if (g.url) { a.target = '_blank'; a.rel = 'noopener'; } a.textContent = g.soldOut ? 'Sold out' : 'Tickets';
-      a.setAttribute('aria-label', 'Tickets for ' + g.venue + ', ' + date.textContent);
-      li.append(date, venue, a); ul.appendChild(li);
+  // the very next gig lives in the scroll animation's card; this list holds the rest, in date order
+  // (visitors who get the still hero have no card, so they see every date here)
+  const listed = heroMode() === 'static' ? upcoming : upcoming.slice(1);
+  if (listed.length) {
+    const grid = document.createElement('div'); grid.className = 'gig-grid';
+    listed.forEach(g => {
+      const d = new Date(g.date + 'T12:00:00');
+      const card = document.createElement('article'); card.className = 'gig';
+      let poster;
+      if (g.poster) {
+        poster = document.createElement('img'); poster.className = 'gig-poster'; poster.src = g.poster; poster.loading = 'lazy';
+        poster.alt = 'Poster for Fizzy Orange at ' + where(g) + ', ' + gigDate(g);
+      } else {
+        poster = document.createElement('div'); poster.className = 'gig-poster ph'; poster.setAttribute('aria-hidden', 'true');
+        const day = document.createElement('b'); day.textContent = d.getDate();
+        const mon = document.createElement('span'); mon.textContent = d.toLocaleDateString('en-IE', { month: 'short' });
+        poster.append(day, mon);
+      }
+      const info = document.createElement('div'); info.className = 'gig-text';
+      const date = document.createElement('p'); date.className = 'date'; date.textContent = gigDate(g);
+      const venue = document.createElement('h3'); venue.textContent = g.venue;
+      const city = document.createElement('p'); city.className = 'city'; city.textContent = g.city || '';
+      const a = document.createElement('a'); a.className = 'btn'; a.href = g.url && !g.soldOut ? g.url : '#list';
+      if (g.url && !g.soldOut) { a.target = '_blank'; a.rel = 'noopener'; }
+      a.textContent = g.soldOut ? 'Sold out' : g.url ? 'Tickets' : 'Join the list';
+      a.setAttribute('aria-label', a.textContent + ': ' + where(g) + ', ' + gigDate(g));
+      info.append(date, venue, city, a); card.append(poster, info); grid.appendChild(card);
     });
-    gigbox.appendChild(ul);
+    gigbox.appendChild(grid);
   } else {
     const empty = document.createElement('div'); empty.className = 'empty';
-    const msg = document.createElement('p'); msg.textContent = CMS.gigs_empty || "No new dates just yet. Join the list and you'll hear first.";
+    const msg = document.createElement('p');
+    msg.textContent = upcoming.length ? "That's the only date on the calendar for now. More are on the way: join the list and you'll hear first."
+      : CMS.gigs_empty || "No new dates just yet. Join the list and you'll hear first.";
     const join = document.createElement('a'); join.className = 'btn'; join.href = '#list'; join.textContent = 'Join the list';
     empty.append(msg, join); gigbox.appendChild(empty);
   }
@@ -1055,8 +1177,36 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   /* ================= spotify, only on request ================= */
   document.getElementById('loadPlayer').addEventListener('click', () => {
     const box = document.getElementById('player');
-    box.innerHTML = '<iframe title="Fizzy Orange on Spotify" src="https://open.spotify.com/embed/artist/1hSt79a7e2OZzSD3pJgtCZ?utm_source=generator" allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>';
+    // the latest release's own player; an artist link falls back to the artist player
+    const m = /open\.spotify\.com\/(album|artist|track|playlist)\/([A-Za-z0-9]+)/.exec(CMS.release_url || '');
+    const f = document.createElement('iframe');
+    f.title = 'Fizzy Orange on Spotify'; f.loading = 'lazy';
+    f.src = m ? 'https://open.spotify.com/embed/' + m[1] + '/' + m[2] + '?utm_source=generator' : 'https://open.spotify.com/embed/artist/1hSt79a7e2OZzSD3pJgtCZ?utm_source=generator';
+    f.allow = 'clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+    box.replaceChildren(f);
   });
+
+  /* ================= gallery photo viewer ================= */
+  const lb = document.getElementById('lightbox');
+  const shots = [...document.querySelectorAll('.jgrid a')];
+  let at = 0;
+  const showShot = (i) => {
+    at = (i + shots.length) % shots.length;
+    const a = shots[at], img = a.querySelector('img');
+    const big = document.getElementById('lbImg');
+    big.src = a.getAttribute('href'); big.alt = img.alt;
+    document.getElementById('lbCap').textContent = a.dataset.caption || '';
+  };
+  shots.forEach((a, i) => a.addEventListener('click', e => {
+    if (!lb.showModal) return;              // very old browsers just open the photo
+    e.preventDefault(); showShot(i); lb.showModal();
+  }));
+  document.getElementById('lbClose').addEventListener('click', () => lb.close());
+  document.getElementById('lbPrev').addEventListener('click', () => showShot(at - 1));
+  document.getElementById('lbNext').addEventListener('click', () => showShot(at + 1));
+  lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
+  lb.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') showShot(at - 1); if (e.key === 'ArrowRight') showShot(at + 1); });
+  if (shots.length < 2) { document.getElementById('lbPrev').hidden = true; document.getElementById('lbNext').hidden = true; }
 
   /* ================= mailing list ================= */
   const form = document.getElementById('signup');

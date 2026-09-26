@@ -1,6 +1,6 @@
 import type { Env } from "./env";
 
-export const CONTENT_FILES = ["gigs", "press", "photos", "settings"] as const;
+export const CONTENT_FILES = ["gigs", "press", "photos", "gallery", "settings"] as const;
 export type ContentFile = (typeof CONTENT_FILES)[number];
 
 function cfg(env: Env) {

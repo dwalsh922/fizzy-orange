@@ -1,7 +1,7 @@
 import { json, type Data, type Env } from "../../_lib/env";
 import { branch, CONTENT_FILES, gh, readContent, toB64, type ContentFile } from "../../_lib/github";
 
-// GET: all four content files with their GitHub versions. PUT: save one file (commit → rebuild).
+// GET: all the content files with their GitHub versions. PUT: save one file (commit → rebuild).
 export const onRequestGet: PagesFunction<Env, string, Data> = async ({ env, data }) => {
   const entries = await Promise.all(CONTENT_FILES.map(async (f) => [f, await readContent(env, f)] as const));
   return json({ ok: true, editor: data.email, files: Object.fromEntries(entries) });
@@ -23,12 +23,14 @@ function validate(file: ContentFile, d: unknown): string | null {
       if (!str(it.date) || !/^\d{4}-\d{2}-\d{2}$/.test(it.date as string)) return "Every gig needs a date.";
       if (!str(it.venue) || !(it.venue as string).trim()) return "Every gig needs a venue.";
       if (!url(it.url)) return `The ticket link for ${it.venue} must start with https://`;
+      if (!url(it.poster)) return `The poster for ${it.venue} didn't upload properly. Choose it again.`;
     }
     if (file === "press") {
       if (!str(it.outlet) || !(it.outlet as string).trim()) return "Every article needs the publication's name.";
       if (!url(it.url, true)) return `The link for ${it.outlet} must start with https://`;
     }
-    if (file === "photos" && !url(it.url, true)) return "Every photo needs an image.";
+    if ((file === "photos" || file === "gallery") && !url(it.url, true)) return "Every photo needs an image.";
+    if (file === "gallery" && ((it.w !== undefined && typeof it.w !== "number") || (it.h !== undefined && typeof it.h !== "number"))) return "Photo sizes must be numbers.";
   }
   return null;
 }

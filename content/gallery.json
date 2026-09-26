@@ -1,0 +1,26 @@
+[
+  {
+    "id": "studio",
+    "url": "/assets/band-studio.jpg",
+    "w": 900,
+    "h": 1080,
+    "caption": "The studio, Dublin",
+    "alt": "The six members of Fizzy Orange in their home studio"
+  },
+  {
+    "id": "rooftop",
+    "url": "/assets/band-rooftop.jpg",
+    "w": 900,
+    "h": 900,
+    "caption": "Golden hour",
+    "alt": "The band grinning together on a sunny rooftop"
+  },
+  {
+    "id": "arch",
+    "url": "/assets/band-arch.jpg",
+    "w": 480,
+    "h": 480,
+    "caption": "In mono, obviously",
+    "alt": "The band in black and white under a stone archway"
+  }
+]
