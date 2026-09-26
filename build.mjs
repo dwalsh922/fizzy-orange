@@ -1,0 +1,58 @@
+// Fizzy Orange build: writes content/*.json into index.html and copies the site into dist/.
+// No dependencies. Cloudflare Pages runs `node build.mjs` on every push (admin saves included).
+// Locally: `node build.mjs`, then serve the dist folder.
+import { readFileSync, writeFileSync, rmSync, mkdirSync, cpSync, existsSync } from "node:fs";
+
+const OUT = "dist";
+const read = (f) => JSON.parse(readFileSync(`content/${f}.json`, "utf8"));
+const settings = read("settings");
+const gigs = read("gigs");
+const press = read("press").filter((p) => p.published !== false);
+const photos = read("photos");
+
+const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const safeUrl = (u) => (/^(https:\/\/|\/|mailto:)/.test(String(u || "").trim()) ? String(u).trim() : "");
+
+function link(key) {
+  const email = settings.email || "";
+  if (key === "mailto") return email ? `mailto:${email}` : "";
+  if (key === "mailto_booking") return email ? `mailto:${email}?subject=Booking%20enquiry` : "";
+  return safeUrl(settings[key]);
+}
+
+const blocks = {
+  press_hero: () => press.slice(0, 3).map((p) => `          <a class="outlet" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">
+            <span class="brand" data-split>${esc(p.outlet)}</span>
+            <span class="what">${esc(p.headline)} <span aria-hidden="true">→</span></span>
+          </a>`).join("\n") + "\n",
+  press_band: () => press.map((p) => `                <a class="quote" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener"><blockquote><p>${esc(p.outlet)}</p><cite>${esc(p.headline)} <span aria-hidden="true">→</span></cite></blockquote></a>`).join("\n"),
+  photos: () => photos.map((ph, i) => `              <figure class="photo ${"abc"[i % 3]}"><img src="${esc(safeUrl(ph.url))}" alt="${esc(ph.alt || ph.caption || "Fizzy Orange")}" loading="lazy"><figcaption>${esc(ph.caption)}</figcaption></figure>`).join("\n") + "\n",
+  members: () => String(settings.band_members || "").split(",").map((m) => m.trim()).filter(Boolean).map((m) => `<li>${esc(m)}</li>`).join(""),
+  socials: () => [["instagram", "Instagram"], ["spotify", "Spotify"], ["apple_music", "Apple Music"], ["youtube", "YouTube"], ["tiktok", "TikTok"], ["bandcamp", "Bandcamp"]]
+    .filter(([k]) => safeUrl(settings[k]))
+    .map(([k, label]) => `      <li><a href="${esc(safeUrl(settings[k]))}" target="_blank" rel="noopener">${label}</a></li>`).join("\n"),
+  data: () => `<script id="cms-data" type="application/json">${JSON.stringify({
+    gigs: gigs.filter((g) => g.published !== false),
+    email: settings.email || "",
+    gigs_empty: settings.gigs_empty || "",
+  }).replace(/</g, "\\u003c")}</script>`,
+};
+
+let html = readFileSync("index.html", "utf8");
+let missing = [];
+html = html.replace(/<!--b:(\w+)-->[\s\S]*?<!--\/b-->/g, (_, k) => (blocks[k] ? blocks[k]() : (missing.push(k), "")));
+html = html.replace(/<!--t:(\w+)-->[\s\S]*?<!--\/t-->/g, (_, k) => (k in settings ? esc(settings[k]) : (missing.push(k), "")));
+html = html.replace(/href="[^"]*"([^>]*?)\sdata-href="(\w+)"/g, (_, rest, k) => {
+  const u = link(k);
+  return u ? `href="${esc(u)}"${rest}` : `href="#"${rest} hidden`;
+});
+html = html.replace(/src="[^"]*"([^>]*?)\sdata-src="(\w+)"/g, (_, rest, k) => `src="${esc(safeUrl(settings[k]))}"${rest}`);
+if (missing.length) { console.error("Missing content for:", [...new Set(missing)].join(", ")); process.exit(1); }
+
+rmSync(OUT, { recursive: true, force: true });
+mkdirSync(OUT);
+for (const p of ["assets", "media", "admin", "_headers", "_redirects", "robots.txt"]) {
+  if (existsSync(p)) cpSync(p, `${OUT}/${p}`, { recursive: true });
+}
+writeFileSync(`${OUT}/index.html`, html);
+console.log(`Built ${OUT}/: ${gigs.length} gigs, ${press.length} press, ${photos.length} photos.`);

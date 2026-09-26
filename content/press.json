@@ -1,0 +1,23 @@
+[
+  {
+    "id": "hotpress-studio-5a",
+    "outlet": "Hotpress",
+    "headline": "Premiere: Live at Studio 5A",
+    "url": "https://www.hotpress.com/culture/premiere-fizzy-orange-live-at-studio-5a-in-the-isle-of-wight-22938762",
+    "published": true
+  },
+  {
+    "id": "wonderland-in-mono",
+    "outlet": "Wonderland",
+    "headline": "\"Infectious rhythm and melodic hooks.\"",
+    "url": "https://www.wonderlandmagazine.com/2024/04/04/fizzy-orange/",
+    "published": true
+  },
+  {
+    "id": "nialler9-best-new-irish",
+    "outlet": "Nialler9",
+    "headline": "10 best new Irish tracks of the week",
+    "url": "https://nialler9.com/10-best-new-irish-tracks-march-27/",
+    "published": true
+  }
+]

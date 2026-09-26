@@ -404,24 +404,25 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="chip">
           <p class="kicker">Live</p>
           <h2 data-split>Catch us live.</h2>
-          <p class="line" data-split="words" id="heroGigLine">New dates are on the way. Join the list and hear first.</p>
+          <p class="line" data-split="words" id="heroGigLine"><!--t:gigs_hero_line-->New dates are on the way. Join the list and hear first.<!--/t--></p>
           <div class="chip-cta"><a class="btn" id="heroGigBtn" href="#gigs">Gigs and tickets <span aria-hidden="true">→</span></a></div>
         </div>
       </div>
       <div class="band left" data-range="0.35,0.56" data-fx="shiver">
         <div class="chip release">
-          <img class="cover" src="assets/old-ones.jpg" alt="The Old Ones cover: a busy black and white street market" width="480" height="480">
+          <img class="cover" src="assets/old-ones.jpg" data-src="release_cover" alt="The Old Ones cover: a busy black and white street market" width="480" height="480">
           <div>
             <p class="kicker">Out now on Spotify</p>
-            <h2 data-split>Old Ones.</h2>
-            <p class="line" data-split="words">Our latest record. Eight songs, all on real gear.</p>
+            <h2 data-split><!--t:release_title-->Old Ones<!--/t-->.</h2>
+            <p class="line" data-split="words"><!--t:release_line-->Our latest record. Eight songs, all on real gear.<!--/t--></p>
           </div>
-          <div class="chip-cta"><a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a></div>
+          <div class="chip-cta"><a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" data-href="release_url" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a></div>
         </div>
       </div>
       <div class="band right" data-range="0.60,0.79" data-fx="splash">
         <div class="chip press">
           <p class="kicker">As featured in</p>
+          <!--b:press_hero-->
           <a class="outlet" href="https://www.hotpress.com/culture/premiere-fizzy-orange-live-at-studio-5a-in-the-isle-of-wight-22938762" target="_blank" rel="noopener">
             <span class="brand" data-split>Hotpress</span>
             <span class="what">Premiere: Live at Studio 5A <span aria-hidden="true">→</span></span>
@@ -434,12 +435,13 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
             <span class="brand" data-split>Nialler9</span>
             <span class="what">10 best new Irish tracks of the week <span aria-hidden="true">→</span></span>
           </a>
+          <!--/b-->
         </div>
       </div>
       <div class="band settle" data-range="0.83,1" data-fx="rise">
         <div class="s-left">
           <img class="logo" src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798">
-          <div class="chip" style="margin-top:18px"><p data-split="words">Freshly squeezed in Dublin. Best served loud.</p></div>
+          <div class="chip" style="margin-top:18px"><p data-split="words"><!--t:tagline-->Freshly squeezed in Dublin. Best served loud.<!--/t--></p></div>
         </div>
         <div class="s-right">
           <div class="btns">
@@ -456,10 +458,10 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <!-- the static hero (phones, portrait tablets, reduced motion) -->
   <section class="hero-static" aria-label="Fizzy Orange">
     <img class="orange" src="assets/orange-happy.webp" alt="The Fizzy Orange character, a grinning cartoon orange" width="900" height="900">
-    <p class="kicker">Dublin city · six-piece · all analogue</p>
+    <p class="kicker"><!--t:kicker-->Dublin city · six-piece · all analogue<!--/t--></p>
     <h1 class="vh">Fizzy Orange</h1>
     <img class="logo" src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798">
-    <p class="line">Freshly squeezed in Dublin. Best served loud.</p>
+    <p class="line"><!--t:tagline-->Freshly squeezed in Dublin. Best served loud.<!--/t--></p>
     <div class="btns">
       <a class="btn" href="#gigs">Get gig tickets</a>
       <a class="btn" href="#listen">Listen now</a>
@@ -506,7 +508,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           <div class="rv">
             <span class="label">Gigs</span>
             <h2 class="big" id="gigs-h">Catch us live.</h2>
-            <p class="lede">Six of us on one stage, and a room that won't stand still.</p>
+            <p class="lede"><!--t:gigs_intro-->Six of us on one stage, and a room that won't stand still.<!--/t--></p>
           </div>
           <div class="rv" id="gigbox"></div>
         </div>
@@ -524,7 +526,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           <div class="rv">
             <span class="label">Listen</span>
             <h2 class="big" id="listen-h">In Mono.</h2>
-            <p class="lede">Our debut EP, now in a deluxe edition with three songs nobody's heard yet. Cut at Sonic Studios and mixed in mono, the old way.</p>
+            <p class="lede"><!--t:listen_intro-->Our debut EP, now in a deluxe edition with three songs nobody's heard yet. Cut at Sonic Studios and mixed in mono, the old way.<!--/t--></p>
             <ol class="tracks">
               <li><span class="n">01</span>Rita<span class="t">2:49</span></li>
               <li><span class="n">02</span>By The Bay<span class="t">2:46</span></li>
@@ -537,17 +539,17 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
               <li><span class="n">09</span>Something is Wrong <em>New</em><span class="t">2:04</span></li>
             </ol>
             <div class="platforms">
-              <a class="btn" href="https://open.spotify.com/artist/1hSt79a7e2OZzSD3pJgtCZ" target="_blank" rel="noopener">Spotify</a>
-              <a class="btn ghost" href="https://music.apple.com/ie/artist/fizzy-orange/1522993197" target="_blank" rel="noopener">Apple Music</a>
-              <a class="btn ghost" href="https://fizzyorange.bandcamp.com/album/in-mono-deluxe" target="_blank" rel="noopener">Bandcamp</a>
-              <a class="btn ghost" href="https://www.youtube.com/@fizzyorange5703" target="_blank" rel="noopener">YouTube</a>
+              <a class="btn" href="https://open.spotify.com/artist/1hSt79a7e2OZzSD3pJgtCZ" data-href="spotify" target="_blank" rel="noopener">Spotify</a>
+              <a class="btn ghost" href="https://music.apple.com/ie/artist/fizzy-orange/1522993197" data-href="apple_music" target="_blank" rel="noopener">Apple Music</a>
+              <a class="btn ghost" href="https://fizzyorange.bandcamp.com/album/in-mono-deluxe" data-href="bandcamp" target="_blank" rel="noopener">Bandcamp</a>
+              <a class="btn ghost" href="https://www.youtube.com/@fizzyorange5703" data-href="youtube" target="_blank" rel="noopener">YouTube</a>
             </div>
             <div class="latest">
-              <img src="assets/old-ones.jpg" alt="The Old Ones cover" width="480" height="480" loading="lazy">
+              <img src="assets/old-ones.jpg" data-src="release_cover" alt="The Old Ones cover" width="480" height="480" loading="lazy">
               <div>
                 <p class="kicker">Newest on Spotify</p>
-                <p>Old Ones. Our latest record, eight songs long.</p>
-                <a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a>
+                <p><!--t:release_title-->Old Ones<!--/t-->. <!--t:release_line-->Our latest record. Eight songs, all on real gear.<!--/t--></p>
+                <a class="btn" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" data-href="release_url" target="_blank" rel="noopener">Listen on Spotify <span aria-hidden="true">→</span></a>
               </div>
             </div>
             <div class="player" id="player">
@@ -566,22 +568,26 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="panel">
           <div class="band-grid">
             <div class="photos rv">
+              <!--b:photos-->
               <figure class="photo a"><img src="assets/band-studio.jpg" alt="The six members of Fizzy Orange in their home studio, with a boombox and a red lamp behind them" width="900" height="1080" loading="lazy"><figcaption>The studio, Dublin</figcaption></figure>
               <figure class="photo b"><img src="assets/band-rooftop.jpg" alt="The band grinning together on a sunny rooftop" width="900" height="900" loading="lazy"><figcaption>Golden hour</figcaption></figure>
               <figure class="photo c"><img src="assets/band-arch.jpg" alt="The band in black and white under a stone archway, one of them sticking his tongue out" width="480" height="480" loading="lazy"><figcaption>In mono, obviously</figcaption></figure>
+              <!--/b-->
             </div>
             <div class="rv">
               <span class="label">Dublin City Soul</span>
               <h2 class="big" id="band-h">Six mates from Dublin.</h2>
-              <p class="lede">We've been playing together since school. Kevin, Jack, Cian, Eoin and Rioghan started it, and Maxime joined just before In Mono. Sixties songwriting, seventies studio sounds, eighties home recording, all on real gear.</p>
+              <p class="lede"><!--t:band_intro-->We've been playing together since school. Kevin, Jack, Cian, Eoin and Rioghan started it, and Maxime joined just before In Mono. Sixties songwriting, seventies studio sounds, eighties home recording, all on real gear.<!--/t--></p>
               <ul class="members" aria-label="Band members">
-                <li>Kevin Keeley</li><li>Jack Martin</li><li>Cian Byrne</li><li>Eoin Dillon</li><li>Rioghan Mc Carthy</li><li>Maxime Arnold</li>
+                <!--b:members-->                <li>Kevin Keeley</li><li>Jack Martin</li><li>Cian Byrne</li><li>Eoin Dillon</li><li>Rioghan Mc Carthy</li><li>Maxime Arnold</li><!--/b-->
               </ul>
               <p class="kicker" style="margin-top:4px">As featured in</p>
               <div class="quotes">
+                <!--b:press_band-->
                 <a class="quote" href="https://www.hotpress.com/culture/premiere-fizzy-orange-live-at-studio-5a-in-the-isle-of-wight-22938762" target="_blank" rel="noopener"><blockquote><p>Hotpress</p><cite>Premiere: Live at Studio 5A <span aria-hidden="true">→</span></cite></blockquote></a>
                 <a class="quote" href="https://www.wonderlandmagazine.com/2024/04/04/fizzy-orange/" target="_blank" rel="noopener"><blockquote><p>Wonderland</p><cite>"Infectious rhythm and melodic hooks." <span aria-hidden="true">→</span></cite></blockquote></a>
                 <a class="quote" href="https://nialler9.com/10-best-new-irish-tracks-march-27/" target="_blank" rel="noopener"><blockquote><p>Nialler9</p><cite>10 best new Irish tracks of the week <span aria-hidden="true">→</span></cite></blockquote></a>
+                <!--/b-->
               </div>
             </div>
           </div>
@@ -620,7 +626,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
           <div class="rv">
             <span class="label">Mailing list</span>
             <h2 class="big" id="list-h">Get the fizz first.</h2>
-            <p class="lede">Gig dates and new songs, before anyone else.</p>
+            <p class="lede"><!--t:list_intro-->Gig dates and new songs, before anyone else.<!--/t--></p>
             <ul class="perks">
               <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>First to hear about gigs.</li>
               <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>New songs before release day.</li>
@@ -631,6 +637,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
                 <div class="field">
                   <label for="email">Your email</label>
                   <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+                  <input name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
                 </div>
                 <button class="btn" type="submit">Sign me up</button>
               </form>
@@ -650,13 +657,13 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
             <div class="rv">
               <span class="label">Bookings</span>
               <h2 class="big" id="book-h">Book Fizzy Orange.</h2>
-              <p class="lede">Venues, festivals and promoters: tell us the date, the place and the plan.</p>
+              <p class="lede"><!--t:book_intro-->Venues, festivals and promoters: tell us the date, the place and the plan.<!--/t--></p>
               <ul class="facts"><li>Six-piece live band</li><li>Based in Dublin</li><li>Playing Ireland and the UK</li></ul>
             </div>
             <div class="mailbox rv">
               <p>Drop us a line and we'll get back to you.</p>
-              <a class="btn" href="mailto:luke@sleepover.club?subject=Booking%20enquiry">Email the band <span aria-hidden="true">→</span></a>
-              <p style="margin:14px 0 0"><a class="addr" href="mailto:luke@sleepover.club?subject=Booking%20enquiry">luke@sleepover.club</a></p>
+              <a class="btn" href="mailto:luke@sleepover.club?subject=Booking%20enquiry" data-href="mailto_booking">Email the band <span aria-hidden="true">→</span></a>
+              <p style="margin:14px 0 0"><a class="addr" href="mailto:luke@sleepover.club?subject=Booking%20enquiry" data-href="mailto_booking"><!--t:email-->luke@sleepover.club<!--/t--></a></p>
             </div>
           </div>
         </div>
@@ -669,26 +676,29 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   <div class="wrap">
     <img class="flogo" src="assets/logo.webp" alt="Fizzy Orange" width="1400" height="798" loading="lazy">
     <ul class="socials">
+      <!--b:socials-->
       <li><a href="https://www.instagram.com/fizzy_orange_/" target="_blank" rel="noopener">Instagram</a></li>
       <li><a href="https://open.spotify.com/artist/1hSt79a7e2OZzSD3pJgtCZ" target="_blank" rel="noopener">Spotify</a></li>
       <li><a href="https://music.apple.com/ie/artist/fizzy-orange/1522993197" target="_blank" rel="noopener">Apple Music</a></li>
       <li><a href="https://www.youtube.com/@fizzyorange5703" target="_blank" rel="noopener">YouTube</a></li>
       <li><a href="https://www.tiktok.com/@fizzyorangemusic" target="_blank" rel="noopener">TikTok</a></li>
+      <!--/b-->
     </ul>
-    <div class="small"><span>© 2026 Fizzy Orange. Made in Dublin.</span><a href="mailto:luke@sleepover.club">luke@sleepover.club</a></div>
+    <div class="small"><span>© 2026 Fizzy Orange. Made in Dublin.</span><a href="mailto:luke@sleepover.club" data-href="mailto"><!--t:email-->luke@sleepover.club<!--/t--></a></div>
   </div>
 </footer>
 
+<!--b:data--><script id="cms-data" type="application/json">{"gigs":[],"email":"luke@sleepover.club","gigs_empty":"No new dates just yet. Join the list and you'll hear first."}</script><!--/b-->
 <script>
 (() => {
-  /* ================= editable data ================= */
-  // Add gigs here. Past dates hide themselves automatically.
-  // { date: '2026-11-14', venue: "Whelan's", city: 'Dublin', url: 'https://...' }
-  const GIGS = [];
-  // Paste the Formspree form address here (for example 'https://formspree.io/f/abcdwxyz').
-  // Until then, sign-ups open an email to the band instead.
-  const FORM_ENDPOINT = '';
-  const BAND_EMAIL = 'luke@sleepover.club';
+  /* ================= editable data =================
+     Gigs, the contact email and the website text are edited in the admin panel (/admin).
+     They live in content/*.json and the build (build.mjs) writes them into this page. */
+  let CMS = {};
+  try { CMS = JSON.parse(document.getElementById('cms-data').textContent); } catch (_) {}
+  // { id, date: '2026-11-14', venue: "Whelan's", city: 'Dublin', url: 'https://...', soldOut: false, published: true }
+  const GIGS = (CMS.gigs || []).filter(g => g.published !== false);
+  const BAND_EMAIL = CMS.email || 'luke@sleepover.club';
 
   /* ================= the scroll hero ================= */
   // two cuts of the same footage: wide for computers, tall for phones and portrait tablets
@@ -719,7 +729,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     document.getElementById('heroGigLine').textContent = 'Next up: ' + gigDate(g) + ', ' + g.venue + ', ' + g.city + '.';
     const btn = document.getElementById('heroGigBtn');
     btn.href = g.url; btn.target = '_blank'; btn.rel = 'noopener';
-    btn.firstChild.textContent = 'Get tickets ';
+    btn.firstChild.textContent = g.soldOut ? 'Sold out ' : 'Get tickets ';
   }
 
   // split headlines into words and characters, once
@@ -1030,13 +1040,16 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
       date.textContent = gigDate(g);
       const venue = document.createElement('span'); venue.className = 'venue'; venue.textContent = g.venue;
       const city = document.createElement('span'); city.className = 'city'; city.textContent = g.city; venue.appendChild(city);
-      const a = document.createElement('a'); a.className = 'btn'; a.href = g.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Tickets';
+      const a = document.createElement('a'); a.className = 'btn'; a.href = g.url || '#list'; if (g.url) { a.target = '_blank'; a.rel = 'noopener'; } a.textContent = g.soldOut ? 'Sold out' : 'Tickets';
       a.setAttribute('aria-label', 'Tickets for ' + g.venue + ', ' + date.textContent);
       li.append(date, venue, a); ul.appendChild(li);
     });
     gigbox.appendChild(ul);
   } else {
-    gigbox.innerHTML = '<div class="empty"><p>No new dates just yet. Join the list and you\'ll hear first.</p><a class="btn" href="#list">Join the list</a></div>';
+    const empty = document.createElement('div'); empty.className = 'empty';
+    const msg = document.createElement('p'); msg.textContent = CMS.gigs_empty || "No new dates just yet. Join the list and you'll hear first.";
+    const join = document.createElement('a'); join.className = 'btn'; join.href = '#list'; join.textContent = 'Join the list';
+    empty.append(msg, join); gigbox.appendChild(empty);
   }
 
   /* ================= spotify, only on request ================= */
@@ -1054,17 +1067,23 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     const email = form.email.value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { form.email.focus(); form.email.setCustomValidity('Please enter a valid email'); form.email.reportValidity(); return; }
     form.email.setCustomValidity('');
-    if (FORM_ENDPOINT) {
-      try {
-        const r = await fetch(FORM_ENDPOINT, { method: 'POST', headers: { 'Accept': 'application/json' }, body: new FormData(form) });
-        if (!r.ok) throw 0;
-        success.textContent = "You're on the list. See you down the front.";
-      } catch (_) { success.textContent = "That didn't go through. Try again in a minute, or email " + BAND_EMAIL + '.'; }
+    // sign-ups are saved in the Cloudflare D1 database by functions/api/subscribe.ts
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; btn.textContent = 'Adding you...';
+    let r = null, j = {};
+    try { r = await fetch('/api/subscribe', { method: 'POST', body: new FormData(form) }); j = await r.json().catch(() => ({})); } catch (_) {}
+    btn.disabled = false; btn.textContent = 'Sign me up';
+    if (r && r.ok) {
+      success.textContent = j.message || "You're on the list. See you down the front.";
+      box.classList.add('sent');
+    } else if (r && r.status === 400) {
+      form.email.setCustomValidity(j.message || 'Please enter a valid email'); form.email.reportValidity();
     } else {
+      // the database isn't reachable (or this is a local preview): fall back to an email to the band
       location.href = 'mailto:' + BAND_EMAIL + '?subject=' + encodeURIComponent('Add me to the mailing list') + '&body=' + encodeURIComponent('Please add ' + email + ' to the Fizzy Orange mailing list.');
       success.textContent = "Your email app should open now. Hit send and you're on the list.";
+      box.classList.add('sent');
     }
-    box.classList.add('sent');
   });
   form.email.addEventListener('input', () => form.email.setCustomValidity(''));
 
