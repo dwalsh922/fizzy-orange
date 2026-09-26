@@ -1,6 +1,6 @@
 // Mailing list sign-up, shared by the homepage and /join. Each [data-signup-box] holds a form
 // (name, email, a hidden bot trap), a .form-note for problems and typo suggestions, and a .success panel.
-// The checks and the confirmation email happen in functions/api/subscribe.ts.
+// The checks (including the instant inbox check) happen in functions/api/subscribe.ts.
 (() => {
   const OK_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   document.querySelectorAll('[data-signup-box]').forEach(box => {
@@ -32,14 +32,8 @@
       }
       note.hidden = false;
     }
-    function done(message, state){
-      success.replaceChildren();
-      const p = document.createElement('p'); p.style.margin = '0'; p.textContent = message; success.appendChild(p);
-      if (state === 'pending') {
-        const tip = document.createElement('p'); tip.className = 'tip';
-        tip.textContent = "Can't see it in a minute or two? Check your spam or promotions folder.";
-        success.appendChild(tip);
-      }
+    function done(message){
+      success.textContent = message;
       box.classList.add('sent');
       success.setAttribute('tabindex', '-1'); success.focus({ preventScroll: true });
     }
@@ -55,7 +49,7 @@
       let r = null, j = {};
       try { r = await fetch('/api/subscribe', { method: 'POST', body: fd }); j = await r.json().catch(() => ({})); } catch (_) {}
       btn.disabled = false; btn.textContent = label;
-      if (r && r.ok) done(j.message || "You're on the list. See you down the front.", j.state);
+      if (r && r.ok) done(j.message || "You're on the list. See you down the front.");
       else if (r && (r.status === 400 || r.status === 429)) {
         showNote(j.message || "That doesn't look like an email address. Check for typos.", j.suggest, /^Did you mean/.test(j.message || ''));
         if (!j.suggest) (j.field === "name" ? form.first_name : form.email).focus();

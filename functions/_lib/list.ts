@@ -1,25 +1,24 @@
 // The mailing list in D1. Tables are created, and older tables given new columns, on first use.
-//   subscribers: one row per fan. status "pending" = waiting to confirm; "confirmed" (or empty, for
-//                sign-ups from before confirmation emails) = on the list.
-//   campaigns:   emails written in the admin.  sends: who each one has gone to, so a send can resume.
+//   subscribers:  one row per fan (name, email, a private token for their unsubscribe link, and what
+//                 the inbox check said). Rows with status "pending" come from an earlier version; nobody
+//                 is pending now, so everything else counts as on the list.
+//   email_checks: every paid inbox check, so the same address is never paid for twice and one visitor
+//                 can't burn through the credits.
 
 export const LIST_TABLE = "CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT (datetime('now')))";
-const COLUMNS = ["name TEXT", "status TEXT", "token TEXT", "confirmed_at TEXT", "confirm_sent_at TEXT", "reminded_at TEXT", "ip TEXT"];
-const ON_LIST = "(status IS NULL OR status = 'confirmed')";
-export { ON_LIST };
+const COLUMNS = ["name TEXT", "status TEXT", "token TEXT", "confirmed_at TEXT", "confirm_sent_at TEXT", "reminded_at TEXT", "ip TEXT", "verified TEXT"];
+export const ON_LIST = "(status IS NULL OR status = 'confirmed')";
 
 let ready: D1Database | null = null;
 export async function ensureList(db: D1Database): Promise<void> {
   if (ready === db) return;
   await db.batch([
     db.prepare(LIST_TABLE),
-    db.prepare("CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, subject TEXT NOT NULL, message TEXT NOT NULL, button_text TEXT, button_url TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), created_by TEXT)"),
-    db.prepare("CREATE TABLE IF NOT EXISTS sends (campaign_id TEXT NOT NULL, email TEXT NOT NULL, sent_at TEXT NOT NULL DEFAULT (datetime('now')), error TEXT, PRIMARY KEY (campaign_id, email))"),
+    db.prepare("CREATE TABLE IF NOT EXISTS email_checks (email TEXT PRIMARY KEY, result TEXT NOT NULL, reason TEXT, ip TEXT, checked_at TEXT NOT NULL DEFAULT (datetime('now')))"),
   ]);
   const { results } = await db.prepare("PRAGMA table_info(subscribers)").all<{ name: string }>();
   const have = new Set(results.map((r) => r.name));
-  const missing = COLUMNS.filter((c) => !have.has(c.split(" ")[0]));
-  for (const c of missing) await db.prepare(`ALTER TABLE subscribers ADD COLUMN ${c}`).run();
+  for (const c of COLUMNS.filter((c) => !have.has(c.split(" ")[0]))) await db.prepare(`ALTER TABLE subscribers ADD COLUMN ${c}`).run();
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS subscribers_token ON subscribers (token)").run();
   ready = db;
 }

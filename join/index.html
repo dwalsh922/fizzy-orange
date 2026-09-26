@@ -59,12 +59,8 @@ form .btn{flex:1 1 100%}
 .form-note .note-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .form-note .btn{padding:.55em .95em;font-size:.95rem;min-height:44px}
 .success{display:none;padding:16px 18px;border:3px solid var(--ink);border-radius:15px;background:var(--leaf);color:#fff;font:700 1.08rem/1.45 var(--body);word-break:break-word}
-.success .tip{margin:8px 0 0;font:500 .92rem/1.45 var(--body)}
 .sent .success{display:block}
 .sent form,.sent .form-note{display:none}
-.flash{margin:0 0 16px;padding:12px 14px;border:3px solid var(--ink);border-radius:15px;background:#fff;font:600 1rem/1.45 var(--body)}
-.welcome p{margin:0 0 1em;font-size:1.12rem;color:var(--text-secondary)}
-.after{display:flex;flex-wrap:wrap;gap:10px}
 .small{margin:18px 0 0;font:500 .82rem/1.5 var(--mono);color:var(--text-secondary)}
 .small a{color:var(--ink)}
 [hidden]{display:none!important}
@@ -78,18 +74,8 @@ form .btn{flex:1 1 100%}
     <img class="peeker" src="/assets/orange-happy.webp" alt="" width="900" height="900">
     <span class="label">Mailing list</span>
 
-    <div id="welcome" class="welcome" hidden>
-      <h1>You're in!</h1>
-      <p>Thanks for confirming. You'll hear about gigs and new songs before anyone else. See you down the front.</p>
-      <div class="after">
-        <a class="btn" href="/">Visit the website</a>
-        <a class="btn ghost" href="https://open.spotify.com/album/7cpuVINqILQNZLNH7a7lts" data-href="release_url" target="_blank" rel="noopener">Play <!--t:release_title-->Old Ones<!--/t--></a>
-      </div>
-    </div>
-
     <div id="join">
       <h1>Get the fizz first.</h1>
-      <p class="flash" id="expired" hidden>That confirmation link has expired or was already used. Sign up again below and we'll send a fresh one.</p>
       <p class="lede"><!--t:list_intro-->Gig dates and new songs, before anyone else.<!--/t--></p>
       <ul class="perks">
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>First to hear about gigs.</li>
@@ -116,15 +102,6 @@ form .btn{flex:1 1 100%}
     </div>
   </div>
 </main>
-<script>
-(() => {
-  // arriving from the confirmation email: /join/?welcome=1 (or ?expired=1 for a used link)
-  const q = new URLSearchParams(location.search);
-  if (q.has('welcome')) { document.getElementById('welcome').hidden = false; document.getElementById('join').hidden = true; document.title = "You're in | Fizzy Orange"; }
-  if (q.has('expired')) document.getElementById('expired').hidden = false;
-  if (location.search) history.replaceState(null, '', location.pathname);
-})();
-</script>
 <script src="/assets/signup.js" defer></script>
 </body>
 </html>

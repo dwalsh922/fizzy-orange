@@ -5,8 +5,8 @@ export interface Env {
   CF_ACCESS_TEAM_DOMAIN?: string; // e.g. "https://youragency.cloudflareaccess.com"
   CF_ACCESS_AUD?: string;         // Access application "Application Audience (AUD) Tag"
   DB?: D1Database;                // D1 database for the mailing list
-  BREVO_API_KEY?: string;         // secret: Brevo (free plan) sends the confirmation emails and the emails to the list
-  BREVO_API_BASE?: string;        // local testing only; defaults to Brevo's API
+  BOUNCER_API_KEY?: string;       // secret: Bouncer checks each new sign-up's inbox really exists (pay as you go)
+  BOUNCER_API_BASE?: string;      // local testing only; defaults to Bouncer's API
 }
 export type Data = { email: string };
 
