@@ -377,11 +377,13 @@ a.quote:hover blockquote{transform:translate(-2px,-3px);box-shadow:8px 8px 0 var
 .popped-perks.settled .perks li,.popped-perks.settled .perks li:nth-child(n){transition-delay:0s}
 form.signup{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
 .field{flex:1 1 240px;display:flex;flex-direction:column;gap:6px}
+.field.first{flex:1 1 150px}
 .field label{font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em}
 .field input{font:600 1.05rem/1.2 var(--body);padding:.85em 1em;border:3px solid var(--ink);border-radius:15px;background:#fff;color:var(--ink);min-height:48px}
 .field input::placeholder{color:#8a7f78}
 .success{display:none;margin-top:16px;padding:16px 18px;border:3px solid var(--ink);border-radius:15px;background:var(--leaf);color:#fff;font:700 1.08rem/1.4 var(--body)}
 .sent .success{display:block}
+.success .tip{margin:8px 0 0;font:500 .92rem/1.45 var(--body)}
 .sent form.signup{display:none}
 .form-note{margin:14px 0 0;padding:14px 16px;border:3px solid var(--ink);border-radius:15px;background:#fff;font:600 1rem/1.45 var(--body)}
 .form-note.err{border-color:#B3261E;color:#8C1D18}
@@ -697,8 +699,12 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
               <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>New songs before release day.</li>
               <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>No spam. We're too busy rehearsing.</li>
             </ul>
-            <div id="signupBox">
+            <div id="signupBox" data-signup-box data-email="<!--t:email-->luke@sleepover.club<!--/t-->">
               <form class="signup" id="signup" novalidate>
+                <div class="field first">
+                  <label for="first_name">First name</label>
+                  <input id="first_name" name="first_name" type="text" autocomplete="given-name" placeholder="Aoife" maxlength="40" required>
+                </div>
                 <div class="field">
                   <label for="email">Your email</label>
                   <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
@@ -707,7 +713,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
                 <button class="btn" type="submit">Sign me up</button>
               </form>
               <div class="form-note" id="signupNote" role="alert" hidden></div>
-              <p class="success" role="status" id="success">You're on the list. See you down the front.</p>
+              <div class="success" role="status" id="success">You're on the list. See you down the front.</div>
             </div>
             <p class="unsub-line">Every email has an unsubscribe link, or <a href="/unsubscribe/">unsubscribe here</a> any time.</p>
           </div>
@@ -790,7 +796,6 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   try { CMS = JSON.parse(document.getElementById('cms-data').textContent); } catch (_) {}
   // { id, date: '2026-11-14', venue: "Whelan's", city: 'Dublin', url: 'https://...', soldOut: false, published: true }
   const GIGS = (CMS.gigs || []).filter(g => g.published !== false);
-  const BAND_EMAIL = CMS.email || 'luke@sleepover.club';
 
   /* ================= the scroll hero ================= */
   // two cuts of the same footage: wide for computers, tall for phones and portrait tablets
@@ -1194,60 +1199,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   lb.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') showShot(at - 1); if (e.key === 'ArrowRight') showShot(at + 1); });
   if (shots.length < 2) { document.getElementById('lbPrev').hidden = true; document.getElementById('lbNext').hidden = true; }
 
-  /* ================= mailing list ================= */
-  const form = document.getElementById('signup');
-  const box = document.getElementById('signupBox');
-  const success = document.getElementById('success');
-  const note = document.getElementById('signupNote');
-  let confirmed = false;   // the fan said "no, my address is right" to a typo suggestion
-  const hideNote = () => { note.hidden = true; note.replaceChildren(); };
-  function showNote(message, suggest){
-    note.className = 'form-note' + (suggest ? '' : ' err');
-    const p = document.createElement('p'); p.style.margin = '0';
-    if (suggest && message.startsWith('Did you mean')) {
-      p.append('Did you mean '); const b = document.createElement('b'); b.textContent = suggest; p.append(b, '?');
-    } else p.textContent = message;
-    note.replaceChildren(p);
-    if (suggest) {
-      const row = document.createElement('div'); row.className = 'note-btns';
-      const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn'; yes.textContent = 'Yes, use ' + suggest;
-      yes.addEventListener('click', () => { form.email.value = suggest; confirmed = false; hideNote(); form.requestSubmit(); });
-      row.appendChild(yes);
-      if (message.startsWith('Did you mean')) {
-        const no = document.createElement('button'); no.type = 'button'; no.className = 'btn ghost'; no.textContent = 'No, mine is right';
-        no.addEventListener('click', () => { confirmed = true; hideNote(); form.requestSubmit(); });
-        row.appendChild(no);
-      }
-      note.appendChild(row);
-    }
-    note.hidden = false;
-  }
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const email = form.email.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showNote("That doesn't look like an email address. Check for typos."); form.email.focus(); return; }
-    hideNote();
-    // every address is checked, then saved in the Cloudflare D1 database, by functions/api/subscribe.ts
-    const btn = form.querySelector('button[type=submit]');
-    btn.disabled = true; btn.textContent = 'Checking...';
-    const fd = new FormData(form); if (confirmed) fd.set('confirmed', '1');
-    let r = null, j = {};
-    try { r = await fetch('/api/subscribe', { method: 'POST', body: fd }); j = await r.json().catch(() => ({})); } catch (_) {}
-    btn.disabled = false; btn.textContent = 'Sign me up';
-    if (r && r.ok) {
-      success.textContent = j.message || "You're on the list. See you down the front.";
-      box.classList.add('sent');
-    } else if (r && r.status === 400) {
-      showNote(j.message || "That doesn't look like an email address. Check for typos.", j.suggest);
-      if (!j.suggest) form.email.focus();
-    } else {
-      // the database isn't reachable (or this is a local preview): fall back to an email to the band
-      location.href = 'mailto:' + BAND_EMAIL + '?subject=' + encodeURIComponent('Add me to the mailing list') + '&body=' + encodeURIComponent('Please add ' + email + ' to the Fizzy Orange mailing list.');
-      success.textContent = "Your email app should open now. Hit send and you're on the list.";
-      box.classList.add('sent');
-    }
-  });
-  form.email.addEventListener('input', () => { confirmed = false; hideNote(); });
+  /* mailing list sign-up: assets/signup.js */
 
   /* ================= in-page links: scroll, but leave the address bar alone ================= */
   document.addEventListener('click', e => {
@@ -1269,5 +1221,6 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   drawRibbon();
 })();
 </script>
+<script src="assets/signup.js" defer></script>
 </body>
 </html>

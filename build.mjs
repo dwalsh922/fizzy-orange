@@ -86,13 +86,15 @@ function render(html) {
 }
 const html = render(readFileSync("index.html", "utf8"));
 const unsub = render(readFileSync("unsubscribe/index.html", "utf8"));
+const join = render(readFileSync("join/index.html", "utf8"));
 if (missing.length) { console.error("Missing content for:", [...new Set(missing)].join(", ")); process.exit(1); }
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT);
-for (const p of ["assets", "media", "admin", "unsubscribe", "_headers", "_redirects", "robots.txt"]) {
+for (const p of ["assets", "media", "admin", "unsubscribe", "join", "_headers", "_redirects", "robots.txt"]) {
   if (existsSync(p)) cpSync(p, `${OUT}/${p}`, { recursive: true });
 }
 writeFileSync(`${OUT}/index.html`, html);
 writeFileSync(`${OUT}/unsubscribe/index.html`, unsub);
+writeFileSync(`${OUT}/join/index.html`, join);
 console.log(`Built ${OUT}/: ${gigs.length} gigs, ${press.length} press, ${photos.length} photos, ${gallery.length} gallery.`);

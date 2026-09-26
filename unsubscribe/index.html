@@ -56,7 +56,8 @@ input{font:600 1.05rem/1.2 var(--body);padding:.85em 1em;border:3px solid var(--
     <div id="ask">
       <p class="lede">Sorry to see you go. Enter your email and we'll take you off the list straight away.</p>
       <form id="f" novalidate>
-        <div class="field">
+        <input type="hidden" name="t" id="t">
+        <div class="field" id="emailField">
           <label for="email">Your email</label>
           <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
         </div>
@@ -77,14 +78,19 @@ input{font:600 1.05rem/1.2 var(--body);padding:.85em 1em;border:3px solid var(--
 <script>
 (() => {
   const f = document.getElementById('f'), err = document.getElementById('err');
-  // an unsubscribe link can carry the address: /unsubscribe/?email=fan@example.com
-  const pre = new URLSearchParams(location.search).get('email');
-  if (pre) { f.email.value = pre; history.replaceState(null, '', location.pathname); }
+  // the link in every email carries the fan's own code (/unsubscribe/?t=...), so there's nothing to type
+  const q = new URLSearchParams(location.search), t = q.get('t'), pre = q.get('email');
+  if (t && /^[a-f0-9]{20,64}$/.test(t)) {
+    document.getElementById('t').value = t;
+    document.getElementById('emailField').hidden = true;
+    document.querySelector('#ask .lede').textContent = "Sorry to see you go. Press the button and you won't get any more emails from us.";
+  } else if (pre) f.email.value = pre;
+  if (location.search) history.replaceState(null, '', location.pathname);
   f.email.addEventListener('input', () => { err.hidden = true; });
   f.addEventListener('submit', async e => {
     e.preventDefault();
     const email = f.email.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "That doesn't look like an email address. Use the one our emails reach you at."; err.hidden = false; f.email.focus(); return; }
+    if (!f.t.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "That doesn't look like an email address. Use the one our emails reach you at."; err.hidden = false; f.email.focus(); return; }
     const btn = f.querySelector('button'); btn.disabled = true; btn.textContent = 'One moment...';
     let r = null, j = {};
     try { r = await fetch('/api/unsubscribe', { method: 'POST', body: new FormData(f) }); j = await r.json().catch(() => ({})); } catch (_) {}
