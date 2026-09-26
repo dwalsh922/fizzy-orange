@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unsubscribe | Fizzy Orange</title>
+<meta name="description" content="Leave the Fizzy Orange mailing list.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#EE6605">
+<link rel="icon" href="/assets/orange-happy.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=DM+Mono:wght@400;500&family=Shrikhand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --panel:#FBF8F0;--peel:#EE6605;--accent-deep:#C9500C;--accent-deep-hover:#A8430A;--leaf:#5F9A4B;
+  --ink:#1F1A18;--text-secondary:#4A403A;--paper:#EDEBDD;
+  --display:"Shrikhand",Georgia,serif;--body:"Archivo",system-ui,sans-serif;--mono:"DM Mono",ui-monospace,monospace;
+  --ease-out:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body,main,header,section,footer,nav{max-width:100vw;overflow-x:hidden;overflow-x:clip}
+body{margin:0;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:28px 16px 40px;background:var(--peel) url("/assets/peel.webp") center/cover fixed;color:var(--ink);font:400 1.0625rem/1.55 var(--body)}
+img{max-width:100%;height:auto;display:block}
+.brand{display:block;width:clamp(130px,30vw,180px)}
+main{width:min(560px,100%)}
+.panel{background:var(--panel);border:3px solid var(--ink);border-radius:22px;box-shadow:8px 8px 0 var(--ink);padding:clamp(22px,5vw,40px)}
+.label{display:inline-block;font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;background:var(--ink);color:var(--paper);padding:8px 12px;border-radius:999px;margin-bottom:16px}
+h1{font:400 clamp(2.3rem,8vw,3.4rem)/1 var(--display);margin:0 0 .35em}
+.lede{margin:0 0 1.3em;color:var(--text-secondary);font-size:1.1rem}
+form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{flex:1 1 240px;display:flex;flex-direction:column;gap:6px}
+label{font:500 .8rem/1 var(--mono);text-transform:uppercase;letter-spacing:.08em}
+input{font:600 1.05rem/1.2 var(--body);padding:.85em 1em;border:3px solid var(--ink);border-radius:15px;background:#fff;color:var(--ink);min-height:48px;width:100%}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:.8em 1.2em;border:3px solid var(--ink);border-radius:15px;background:var(--accent-deep);color:#fff;font:800 1.02rem/1 var(--body);text-decoration:none;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .25s var(--ease-out),box-shadow .25s var(--ease-out),background-color .25s var(--ease-out)}
+.btn:hover{background:var(--accent-deep-hover);transform:translate(-1px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:disabled{opacity:.6;cursor:progress}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.ghost:hover{background:var(--paper)}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px;box-shadow:0 0 0 7px var(--paper)}
+.err{margin:14px 0 0;padding:12px 14px;border:3px solid #B3261E;border-radius:15px;background:#fff;color:#8C1D18;font:600 1rem/1.45 var(--body)}
+.done{padding:16px 18px;border:3px solid var(--ink);border-radius:15px;background:var(--leaf);color:#fff;font:700 1.08rem/1.45 var(--body);word-break:break-word}
+.after{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.small{margin:18px 0 0;font:500 .82rem/1.5 var(--mono);color:var(--text-secondary)}
+.small a{color:var(--ink)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+</head>
+<body>
+<a class="brand" href="/" aria-label="Fizzy Orange, back to the website"><img src="/assets/logo.webp" alt="Fizzy Orange" width="1400" height="798"></a>
+<main>
+  <div class="panel">
+    <span class="label">Mailing list</span>
+    <h1 id="h">Unsubscribe.</h1>
+    <div id="ask">
+      <p class="lede">Sorry to see you go. Enter your email and we'll take you off the list straight away.</p>
+      <form id="f" novalidate>
+        <div class="field">
+          <label for="email">Your email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+        <button class="btn" type="submit">Unsubscribe me</button>
+      </form>
+      <p class="err" id="err" role="alert" hidden></p>
+    </div>
+    <div id="bye" hidden>
+      <p class="done" role="status" id="msg"></p>
+      <div class="after">
+        <a class="btn ghost" href="/">Back to the website</a>
+      </div>
+      <p class="small">Changed your mind? You can join again any time from the Mailing list section of the website.</p>
+    </div>
+    <p class="small">Trouble? Email <a href="mailto:luke@sleepover.club" data-href="mailto"><!--t:email-->luke@sleepover.club<!--/t--></a> and we'll take you off by hand.</p>
+  </div>
+</main>
+<script>
+(() => {
+  const f = document.getElementById('f'), err = document.getElementById('err');
+  // an unsubscribe link can carry the address: /unsubscribe/?email=fan@example.com
+  const pre = new URLSearchParams(location.search).get('email');
+  if (pre) { f.email.value = pre; history.replaceState(null, '', location.pathname); }
+  f.email.addEventListener('input', () => { err.hidden = true; });
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = f.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "That doesn't look like an email address. Use the one our emails reach you at."; err.hidden = false; f.email.focus(); return; }
+    const btn = f.querySelector('button'); btn.disabled = true; btn.textContent = 'One moment...';
+    let r = null, j = {};
+    try { r = await fetch('/api/unsubscribe', { method: 'POST', body: new FormData(f) }); j = await r.json().catch(() => ({})); } catch (_) {}
+    btn.disabled = false; btn.textContent = 'Unsubscribe me';
+    if (r && r.ok) {
+      document.getElementById('msg').textContent = j.message || "Done. You're off the list.";
+      document.getElementById('ask').hidden = true; document.getElementById('bye').hidden = false;
+      document.getElementById('h').textContent = "You're off the list.";
+    } else {
+      err.textContent = j.message || "That didn't go through. Try again, or email us and we'll take you off by hand.";
+      err.hidden = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

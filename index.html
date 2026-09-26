@@ -382,6 +382,14 @@ form.signup{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
 .success{display:none;margin-top:16px;padding:16px 18px;border:3px solid var(--ink);border-radius:15px;background:var(--leaf);color:#fff;font:700 1.08rem/1.4 var(--body)}
 .sent .success{display:block}
 .sent form.signup{display:none}
+.form-note{margin:14px 0 0;padding:14px 16px;border:3px solid var(--ink);border-radius:15px;background:#fff;font:600 1rem/1.45 var(--body)}
+.form-note.err{border-color:#B3261E;color:#8C1D18}
+.form-note b{font-weight:800;word-break:break-all}
+.form-note .note-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.form-note .btn{padding:.55em .95em;font-size:.95rem}
+.sent .form-note{display:none}
+.unsub-line{margin:18px 0 0;font:500 .82rem/1.5 var(--mono);color:var(--text-secondary)}
+.unsub-line a{color:var(--ink);font-weight:500}
 @media (max-width:860px){.list .panel{grid-template-columns:1fr}}
 
 /* book */
@@ -697,8 +705,10 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
                 </div>
                 <button class="btn" type="submit">Sign me up</button>
               </form>
+              <div class="form-note" id="signupNote" role="alert" hidden></div>
               <p class="success" role="status" id="success">You're on the list. See you down the front.</p>
             </div>
+            <p class="unsub-line">Every email has an unsubscribe link, or <a href="/unsubscribe/">unsubscribe here</a> any time.</p>
           </div>
         </div>
       </div>
@@ -1187,22 +1197,48 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   const form = document.getElementById('signup');
   const box = document.getElementById('signupBox');
   const success = document.getElementById('success');
+  const note = document.getElementById('signupNote');
+  let confirmed = false;   // the fan said "no, my address is right" to a typo suggestion
+  const hideNote = () => { note.hidden = true; note.replaceChildren(); };
+  function showNote(message, suggest){
+    note.className = 'form-note' + (suggest ? '' : ' err');
+    const p = document.createElement('p'); p.style.margin = '0';
+    if (suggest && message.startsWith('Did you mean')) {
+      p.append('Did you mean '); const b = document.createElement('b'); b.textContent = suggest; p.append(b, '?');
+    } else p.textContent = message;
+    note.replaceChildren(p);
+    if (suggest) {
+      const row = document.createElement('div'); row.className = 'note-btns';
+      const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn'; yes.textContent = 'Yes, use ' + suggest;
+      yes.addEventListener('click', () => { form.email.value = suggest; confirmed = false; hideNote(); form.requestSubmit(); });
+      row.appendChild(yes);
+      if (message.startsWith('Did you mean')) {
+        const no = document.createElement('button'); no.type = 'button'; no.className = 'btn ghost'; no.textContent = 'No, mine is right';
+        no.addEventListener('click', () => { confirmed = true; hideNote(); form.requestSubmit(); });
+        row.appendChild(no);
+      }
+      note.appendChild(row);
+    }
+    note.hidden = false;
+  }
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const email = form.email.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { form.email.focus(); form.email.setCustomValidity('Please enter a valid email'); form.email.reportValidity(); return; }
-    form.email.setCustomValidity('');
-    // sign-ups are saved in the Cloudflare D1 database by functions/api/subscribe.ts
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showNote("That doesn't look like an email address. Check for typos."); form.email.focus(); return; }
+    hideNote();
+    // every address is checked, then saved in the Cloudflare D1 database, by functions/api/subscribe.ts
     const btn = form.querySelector('button[type=submit]');
-    btn.disabled = true; btn.textContent = 'Adding you...';
+    btn.disabled = true; btn.textContent = 'Checking...';
+    const fd = new FormData(form); if (confirmed) fd.set('confirmed', '1');
     let r = null, j = {};
-    try { r = await fetch('/api/subscribe', { method: 'POST', body: new FormData(form) }); j = await r.json().catch(() => ({})); } catch (_) {}
+    try { r = await fetch('/api/subscribe', { method: 'POST', body: fd }); j = await r.json().catch(() => ({})); } catch (_) {}
     btn.disabled = false; btn.textContent = 'Sign me up';
     if (r && r.ok) {
       success.textContent = j.message || "You're on the list. See you down the front.";
       box.classList.add('sent');
     } else if (r && r.status === 400) {
-      form.email.setCustomValidity(j.message || 'Please enter a valid email'); form.email.reportValidity();
+      showNote(j.message || "That doesn't look like an email address. Check for typos.", j.suggest);
+      if (!j.suggest) form.email.focus();
     } else {
       // the database isn't reachable (or this is a local preview): fall back to an email to the band
       location.href = 'mailto:' + BAND_EMAIL + '?subject=' + encodeURIComponent('Add me to the mailing list') + '&body=' + encodeURIComponent('Please add ' + email + ' to the Fizzy Orange mailing list.');
@@ -1210,7 +1246,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
       box.classList.add('sent');
     }
   });
-  form.email.addEventListener('input', () => form.email.setCustomValidity(''));
+  form.email.addEventListener('input', () => { confirmed = false; hideNote(); });
 
   /* ================= in-page links: scroll, but leave the address bar alone ================= */
   document.addEventListener('click', e => {

@@ -74,21 +74,25 @@ ${gallery.map((g) => {
   }).replace(/</g, "\\u003c")}</script>`,
 };
 
-let html = readFileSync("index.html", "utf8");
 let missing = [];
-html = html.replace(/<!--b:(\w+)-->[\s\S]*?<!--\/b-->/g, (_, k) => (blocks[k] ? blocks[k]() : (missing.push(k), "")));
-html = html.replace(/<!--t:(\w+)-->[\s\S]*?<!--\/t-->/g, (_, k) => (k in settings ? esc(settings[k]) : (missing.push(k), "")));
-html = html.replace(/href="[^"]*"([^>]*?)\sdata-href="(\w+)"/g, (_, rest, k) => {
-  const u = link(k);
-  return u ? `href="${esc(u)}"${rest}` : `href="#"${rest} hidden`;
-});
-html = html.replace(/src="[^"]*"([^>]*?)\sdata-src="(\w+)"/g, (_, rest, k) => `src="${esc(safeUrl(settings[k]))}"${rest}`);
+function render(html) {
+  html = html.replace(/<!--b:(\w+)-->[\s\S]*?<!--\/b-->/g, (_, k) => (blocks[k] ? blocks[k]() : (missing.push(k), "")));
+  html = html.replace(/<!--t:(\w+)-->[\s\S]*?<!--\/t-->/g, (_, k) => (k in settings ? esc(settings[k]) : (missing.push(k), "")));
+  html = html.replace(/href="[^"]*"([^>]*?)\sdata-href="(\w+)"/g, (_, rest, k) => {
+    const u = link(k);
+    return u ? `href="${esc(u)}"${rest}` : `href="#"${rest} hidden`;
+  });
+  return html.replace(/src="[^"]*"([^>]*?)\sdata-src="(\w+)"/g, (_, rest, k) => `src="${esc(safeUrl(settings[k]))}"${rest}`);
+}
+const html = render(readFileSync("index.html", "utf8"));
+const unsub = render(readFileSync("unsubscribe/index.html", "utf8"));
 if (missing.length) { console.error("Missing content for:", [...new Set(missing)].join(", ")); process.exit(1); }
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT);
-for (const p of ["assets", "media", "admin", "_headers", "_redirects", "robots.txt"]) {
+for (const p of ["assets", "media", "admin", "unsubscribe", "_headers", "_redirects", "robots.txt"]) {
   if (existsSync(p)) cpSync(p, `${OUT}/${p}`, { recursive: true });
 }
 writeFileSync(`${OUT}/index.html`, html);
+writeFileSync(`${OUT}/unsubscribe/index.html`, unsub);
 console.log(`Built ${OUT}/: ${gigs.length} gigs, ${press.length} press, ${photos.length} photos, ${gallery.length} gallery.`);

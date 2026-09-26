@@ -1,6 +1,6 @@
 import { json, type Data, type Env } from "../../_lib/env";
 
-const TABLE = "CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT (datetime('now')))";
+import { LIST_TABLE as TABLE } from "../../_lib/list";
 
 export const onRequestGet: PagesFunction<Env, string, Data> = async ({ env }) => {
   if (!env.DB) return json({ ok: false, message: "The mailing list database isn't connected yet." }, 503);

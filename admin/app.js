@@ -483,7 +483,7 @@ const TEXT = [
   ["Top of the page", null, [["kicker", "Small line above the logo", "Shown on phones held sideways and for visitors who turn animations off."], ["tagline", "Tagline", "Under the logo at the end of the scroll animation."], ["gigs_hero_line", "Gig box when there are no dates", "When a gig is added, this is replaced by the next date automatically."]]],
   ["Latest release", "Your newest album or single. It fills the Spotify box in the scroll animation and the whole Listen section, including the player.", [["release_title", "Title"], ["release_line", "One line about it", "Used in the scroll animation."], ["release_url", "Spotify link", "The album or single's Spotify page. The player on the site plays this."], ["release_apple", "Apple Music link", "Leave blank to use your Apple Music artist page."], ["release_bandcamp", "Bandcamp link", "Leave blank to use your Bandcamp page."], ["release_tracks", "Tracklist", "One song per line, with the length after a bar, e.g.  Old Dog | 3:24", true]]],
   ["Section intros", null, [["gigs_intro", "Gigs"], ["gigs_empty", "Gigs, when there are no dates"], ["listen_intro", "Listen", null, true], ["band_intro", "The band", null, true], ["band_members", "Band members", "Separate names with commas."], ["list_intro", "Mailing list"], ["book_intro", "Bookings"], ["gallery_intro", "Gallery"]]],
-  ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
+  ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["list_sender", "Mailing list sender", "The address emails to the mailing list come from. Your mail app needs to be signed in to it."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
 ];
 const LINKS = ["release_url", "release_apple", "release_bandcamp", "instagram", "spotify", "apple_music", "bandcamp", "youtube", "tiktok"];
 
@@ -493,12 +493,13 @@ function SettingsPanel() {
   const input = (k, long) => {
     const on = (e) => { f[k] = e.target.value; bar.dirty(true); };
     if (long) return h("textarea", { style: { minHeight: "120px" }, value: f[k] ?? "", onInput: on });
-    return h("input", { value: f[k] ?? "", type: k === "email" ? "email" : LINKS.includes(k) ? "url" : "text", placeholder: LINKS.includes(k) ? "https://" : null, onInput: on });
+    return h("input", { value: f[k] ?? "", type: k === "email" || k === "list_sender" ? "email" : LINKS.includes(k) ? "url" : "text", placeholder: LINKS.includes(k) ? "https://" : null, onInput: on });
   };
   async function onSave() {
     const bad = LINKS.map((k) => f[k]).find((u) => u && !/^https:\/\//.test(u.trim()));
     if (bad) return show(`Links need to start with https:// (check "${bad}").`, "err");
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return show("The contact email doesn't look right.", "err");
+    if (f.list_sender && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.list_sender.trim())) return show("The mailing list sender doesn't look right.", "err");
     bar.busy(true);
     try { await save("settings", Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v).trim()])), "update the website text"); bar.dirty(false); show(LIVE); }
     catch (x) { show(x.message, "err"); } finally { bar.busy(false); }
@@ -513,17 +514,75 @@ function SettingsPanel() {
 }
 
 /* ================= mailing list ================= */
+/** Splits the list so each email stays inside what mail apps accept (about 50 addresses, 1,900 characters of link). */
+function batches(emails, size) {
+  const out = []; let cur = [];
+  for (const e of emails) {
+    if (cur.length && (cur.length >= 50 || size([...cur, e]) > 1900)) { out.push(cur); cur = []; }
+    cur.push(e);
+  }
+  if (cur.length) out.push(cur);
+  return out;
+}
+
 function SubscribersPanel() {
   const body = h("div", null, h("div", { class: "a-empty" }, h("div", { class: "a-spin" }), h("p", null, "Loading…")));
+  const send = h("div");
   const count = h("span");
   let subs = [];
-  const dl = h("button", { class: "a-btn a-btn--primary", disabled: true, onClick: () => {
+  const sender = (files.settings.data.list_sender || files.settings.data.email || "").trim();
+  const unsubUrl = `${location.origin}/unsubscribe/`;
+  const footer = `\n\n\n--\nFizzy Orange\n${location.origin.replace(/^https?:\/\//, "")}\n\nYou're getting this because you joined the Fizzy Orange mailing list.\nUnsubscribe: ${unsubUrl}`;
+  const subject = h("input", { value: "News from Fizzy Orange", placeholder: "Subject" });
+  const mailto = (list) => `mailto:${encodeURIComponent(sender)}?bcc=${list.map(encodeURIComponent).join(",")}&subject=${encodeURIComponent(subject.value)}&body=${encodeURIComponent(footer)}`;
+  const gmail = (list) => `https://mail.google.com/mail/?view=cm&fs=1&authuser=${encodeURIComponent(sender)}&to=${encodeURIComponent(sender)}&bcc=${list.map(encodeURIComponent).join(",")}&su=${encodeURIComponent(subject.value)}&body=${encodeURIComponent(footer)}`;
+  const copy = async (text, done) => { try { await navigator.clipboard.writeText(text); show(done); } catch { show("Couldn't copy. Select the text and copy it by hand.", "err"); } };
+
+  const drawSend = () => {
+    const emails = subs.map((s) => s.email);
+    if (!emails.length) return send.replaceChildren();
+    // sized with room for a long subject, so typing one can't push a batch over the limit
+    const groups = batches(emails, (list) => mailto(list).length - encodeURIComponent(subject.value).length + 150);
+    let offset = 0;
+    const one = groups.length === 1;
+    const buttons = groups.map((g, i) => {
+      const from = offset + 1, to = offset + g.length; offset = to;
+      const a = h("a", { class: `a-btn ${i === 0 ? "a-btn--primary" : ""}`, href: mailto(g), target: "_blank", rel: "noopener",
+        onClick: () => {
+          a.href = mailto(g);
+          // tick this one off and point at the next batch
+          a.classList.remove("a-btn--primary"); a.style.opacity = ".75";
+          a.textContent = one ? "✓ Opened. Open it again" : `✓ Batch ${i + 1} opened (fans ${from} to ${to})`;
+          buttons[i + 1]?.classList.add("a-btn--primary");
+          a.blur();
+        } },
+        icon(I.mail), one ? `Write to all ${emails.length} ${emails.length === 1 ? "fan" : "fans"}` : `Batch ${i + 1}: fans ${from} to ${to}`);
+      return a;
+    });
+    send.replaceChildren(Card("Email everyone", null,
+      h("p", { style: { margin: "0 0 14px" } }, "Opens a new email in your mail app, from ", h("strong", null, sender || "(no sender set)"),
+        ", with everyone on the list added as hidden (BCC) recipients, so fans never see each other's addresses. An unsubscribe link is already at the bottom: leave it in."),
+      Field("Subject", subject, "You can change it in your mail app too."),
+      !one && h("p", { class: "a-note a-note--warn", style: { margin: "4px 0 12px" } },
+        `The list is split into ${groups.length} batches, because mail apps can't open one email with ${emails.length} addresses. Send them one after another with the same message.`),
+      h("div", { class: "a-actions" }, buttons),
+      h("p", { class: "a-note", style: { margin: "16px 0 0" } }, "Before you press send, check the From line says ", h("strong", null, sender), ". Change the sending address under Website text. Gmail sends to about 500 people a day (2,000 on Google Workspace)."),
+      h("details", { style: { marginTop: "14px" } }, h("summary", { style: { cursor: "pointer", fontWeight: 600 } }, "Nothing opened? Other ways to send"),
+        h("div", { class: "a-actions", style: { marginTop: "12px" } },
+          h("button", { type: "button", class: "a-btn", onClick: () => copy(emails.join(", "), `Copied ${emails.length} addresses. Paste them into the BCC box.`) }, "Copy all addresses"),
+          h("button", { type: "button", class: "a-btn", onClick: () => copy(footer.trim(), "Copied the unsubscribe footer.") }, "Copy the unsubscribe footer"),
+          groups.map((g, i) => h("a", { class: "a-btn", href: gmail(g), target: "_blank", rel: "noopener", onClick: (e) => { e.currentTarget.href = gmail(g); } }, one ? "Open in Gmail instead" : `Batch ${i + 1} in Gmail`))),
+        h("p", { class: "a-hint", style: { margin: "10px 0 0", color: "var(--muted)", fontSize: "14px" } }, "If your computer has no mail app set up, copy the addresses into the BCC box of a new email, and paste the footer at the bottom."))));
+  };
+
+  const dl = h("button", { class: "a-btn", disabled: true, onClick: () => {
     const csv = "email,joined\n" + subs.map((s) => `${s.email},${s.created_at}`).join("\n");
     const a = h("a", { href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })), download: "fizzy-orange-mailing-list.csv" });
     a.click(); show("Downloaded.");
   } }, "Download as a spreadsheet");
   const load = () => listSubscribers().then((r) => {
     subs = r.subscribers; dl.disabled = !subs.length; count.textContent = `${subs.length} so far.`;
+    drawSend();
     body.replaceChildren(!subs.length ? Empty("No sign-ups yet", "When someone joins the list on the website, they'll appear here.")
       : h("div", { class: "a-card" }, h("table", { class: "a-table" },
         h("thead", null, h("tr", null, h("th", null, "Email"), h("th", null, "Joined"), h("th"))),
@@ -536,8 +595,8 @@ function SubscribersPanel() {
   load();
   return h("div", null,
     h("div", { class: "a-head" }, h("div", null, h("h1", null, "Mailing list"), h("p", null, "Everyone who signed up on the website. ", count)), h("div", { class: "a-actions" }, dl)),
-    h("p", { class: "a-note", style: { marginBottom: "18px" } }, "Download the list and import it into Mailchimp, Klaviyo or DICE when you announce a gig. Nobody is emailed from here."),
-    body);
+    h("p", { class: "a-note", style: { marginBottom: "18px" } }, "Sign-ups are checked for typos and dead addresses before they join. Fans who unsubscribe (from the link in your emails, or the page on the site) are taken off straight away."),
+    send, h("div", { style: { height: "16px" } }), body);
 }
 
 /* ================= start ================= */
