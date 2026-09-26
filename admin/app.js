@@ -52,8 +52,19 @@ const removeSubscriber = (email) => call("/api/cms/subscribers?email=" + encodeU
 /** Uploaded files only appear on the live site after the next rebuild, so keep a local preview. */
 const previews = new Map();
 const src = (url) => (url ? previews.get(url) ?? url : "");
+async function decode(file) {
+  try { return await createImageBitmap(file); }
+  catch {
+    const img = new Image(); const u = URL.createObjectURL(file);
+    try { img.src = u; await img.decode(); } catch { throw new Error(`${file.name}: couldn't read that image.`); } finally { URL.revokeObjectURL(u); }
+    // SVGs have no fixed size: draw them large enough to stay sharp
+    if (file.type === "image/svg+xml") { const k = 1600 / Math.max(img.naturalWidth || 300, img.naturalHeight || 150); img.width = Math.round((img.naturalWidth || 300) * k); img.height = Math.round((img.naturalHeight || 150) * k); }
+    else { img.width = img.naturalWidth; img.height = img.naturalHeight; }
+    return img;
+  }
+}
 async function toWebp(file, max) {
-  const bmp = await createImageBitmap(file);
+  const bmp = await decode(file);
   const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
   const c = document.createElement("canvas");
   c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
@@ -78,6 +89,15 @@ async function uploadImage(file) {
   return { url: r.url, w, h };
 }
 const upload = async (file) => (await uploadImage(file)).url;
+/** Gallery photos also get a 1000px copy for the grid, so phones aren't asked to hold dozens of full-size photos. */
+async function uploadWithThumb(file) {
+  const r = await uploadImage(file);
+  if (file.type === "image/gif" || Math.max(r.w, r.h) <= 1000) return r;
+  const { blob } = await toWebp(file, 1000);
+  const t = await call("/api/cms/upload?ext=webp", { method: "POST", body: await b64(blob) });
+  previews.set(t.url, URL.createObjectURL(blob));
+  return { ...r, thumb: t.url };
+}
 const uid = () => crypto.randomUUID();
 const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Dublin" }).format(new Date());
 const longDate = (d) => new Intl.DateTimeFormat("en-IE", { weekday: "short", day: "numeric", month: "long", year: "numeric" }).format(new Date(d + "T12:00:00"));
@@ -128,19 +148,19 @@ function SaveBar(onSave) {
 addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
 /** Picks one image, shrinks it in the browser, uploads it. */
-function ImagePicker(label, hint, value, onChange) {
+function ImagePicker(label, hint, value, onChange, opts = {}) {
   const wrap = h("div", { class: "a-field" });
   const err = h("p", { class: "a-err", role: "alert", hidden: true });
   const render = () => {
     const input = h("input", { type: "file", accept: "image/*", hidden: true, onChange: async (e) => {
       const f = e.target.files?.[0]; if (!f) return;
       pick.textContent = "Uploading…"; pick.style.cursor = "progress"; err.hidden = true;
-      try { value = await upload(f); onChange(value); } catch (x) { err.textContent = x.message; err.hidden = false; }
+      try { const r = await uploadImage(f); value = r.url; onChange(value, r); } catch (x) { err.textContent = x.message; err.hidden = false; }
       render();
     } });
     const pick = h("label", { class: "a-btn", style: { cursor: "pointer" } }, value ? "Replace" : "Choose image", input);
     wrap.replaceChildren(h("span", null, label), h("div", { class: "a-pick" },
-      value ? h("img", { class: "a-pick__prev", src: src(value), alt: "" }) : h("div", { class: "a-pick__prev a-pick__ph" }, "No image yet"),
+      value ? h("img", { class: "a-pick__prev", src: src(value), alt: "", style: opts.dark ? { background: "#1F1A18", objectFit: "contain", padding: "10px", width: "180px", height: "80px" } : null }) : h("div", { class: "a-pick__prev a-pick__ph" }, "No image yet"),
       h("div", { class: "a-pick__acts" }, pick,
         value && h("button", { type: "button", class: "a-btn a-btn--danger a-btn--sm", onClick: () => { value = ""; onChange(""); render(); } }, "Remove"))),
       hint && h("small", null, hint), err);
@@ -318,7 +338,7 @@ function PressList() {
       : h("div", { class: "a-rows" }, rows.map((p, i) => {
         const live = p.published !== false; if (live) shown++;
         return h("a", { class: "a-row", href: `#/press/${p.id}` },
-          h("span", { class: "a-row__img a-row__img--ph" }, i + 1),
+          p.logo ? h("img", { class: "a-row__img", src: src(p.logo), alt: "", style: { objectFit: "contain", background: "#1F1A18", padding: "6px" } }) : h("span", { class: "a-row__img a-row__img--ph" }, i + 1),
           h("span", null, h("span", { class: "a-row__t" }, p.outlet), h("span", { class: "a-row__s" }, p.headline)),
           h("span", { class: "a-row__end" },
             !live && h("span", { class: "a-tag a-tag--off" }, "Hidden"),
@@ -330,7 +350,7 @@ function PressForm(id) {
   const all = files.press.data;
   const existing = all.find((p) => p.id === id);
   if (id !== "new" && !existing) return Empty("That article is gone", "It may have been deleted from another device.", h("a", { class: "a-btn", href: "#/press" }, "Back to press"));
-  const p = { id: uid(), outlet: "", headline: "", url: "", published: true, ...(existing ?? {}) };
+  const p = { id: uid(), outlet: "", headline: "", url: "", logo: "", published: true, ...(existing ?? {}) };
   let pos = existing ? all.indexOf(existing) : all.length;
   const bar = SaveBar(onSave);
   const text = (k, attrs = {}) => h("input", { value: p[k] ?? "", ...attrs, onInput: (e) => { p[k] = e.target.value; bar.dirty(true); } });
@@ -367,6 +387,8 @@ function PressForm(id) {
         Field("Headline or quote", text("headline", { placeholder: "e.g. \"Infectious rhythm and melodic hooks.\"" }), "Keep it short: one line."),
         Field("Link to the article", text("url", { type: "url", placeholder: "https://", required: true })),
         check("Show on the website", "Untick to hide it without deleting it.", p.published !== false, (v) => { p.published = v; bar.dirty(true); })),
+      Card("Logo", "Shown on a dark plate on the website, so a white logo on a transparent background (PNG or SVG) looks best. Without one, the publication's name is shown in text.",
+        ImagePicker("Publication logo", "Ideally the full name, not just an icon.", p.logo, (v, r) => { p.logo = v; if (r) { p.logo_w = r.w; p.logo_h = r.h; } else { delete p.logo_w; delete p.logo_h; } bar.dirty(true); }, { dark: true })),
       existing && h("div", null, h("button", { type: "button", class: "a-btn a-btn--danger", onClick: remove }, "Delete this article"))),
     bar.el);
 }
@@ -415,7 +437,7 @@ function GalleryPanel() {
     status.hidden = false;
     for (const f of picked) {
       status.textContent = `Uploading ${done + failed + 1} of ${picked.length}… Keep this page open.`;
-      try { const r = await uploadImage(f); list.push({ id: uid(), url: r.url, w: r.w, h: r.h, caption: "", alt: "" }); done++; touch(); draw(); }
+      try { const r = await uploadWithThumb(f); list.push({ id: uid(), url: r.url, ...(r.thumb ? { thumb: r.thumb } : {}), w: r.w, h: r.h, caption: "", alt: "" }); done++; touch(); draw(); }
       catch (x) { failed++; show(x.message, "err"); }
     }
     status.textContent = `${done} ${done === 1 ? "photo" : "photos"} added${failed ? `, ${failed} didn't upload` : ""}. Add captions if you like, then press Save changes.`;
@@ -435,7 +457,7 @@ function GalleryPanel() {
     tiles.replaceChildren(...(!list.length ? [Empty("No photos yet", "Add some above and they'll appear in the Gallery section at the bottom of the website.")] : [
       h("div", { class: "a-tiles" }, list.map((p, i) => h("div", { class: "a-tile" },
         h("div", { class: "a-tile__prev", style: { aspectRatio: p.w && p.h ? `${p.w} / ${p.h}` : "4 / 3", maxHeight: "220px" } },
-          h("img", { src: src(p.url), alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } })),
+          h("img", { src: src(p.thumb || p.url), alt: "", loading: "lazy", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } })),
         h("div", { class: "a-tile__body" },
           Field("Caption", h("input", { value: p.caption ?? "", placeholder: "Optional", onInput: (e) => { p.caption = e.target.value; touch(); } })),
           Field("Description", h("input", { value: p.alt ?? "", placeholder: "What's in the photo", onInput: (e) => { p.alt = e.target.value; touch(); } }), "For screen readers and Google."),

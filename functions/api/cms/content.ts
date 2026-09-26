@@ -28,9 +28,11 @@ function validate(file: ContentFile, d: unknown): string | null {
     if (file === "press") {
       if (!str(it.outlet) || !(it.outlet as string).trim()) return "Every article needs the publication's name.";
       if (!url(it.url, true)) return `The link for ${it.outlet} must start with https://`;
+      if (!url(it.logo)) return `The logo for ${it.outlet} didn't upload properly. Choose it again.`;
     }
     if ((file === "photos" || file === "gallery") && !url(it.url, true)) return "Every photo needs an image.";
     if (file === "gallery" && ((it.w !== undefined && typeof it.w !== "number") || (it.h !== undefined && typeof it.h !== "number"))) return "Photo sizes must be numbers.";
+    if (file === "gallery" && !url(it.thumb)) return "A photo's small copy didn't upload properly. Remove it and add it again.";
   }
   return null;
 }

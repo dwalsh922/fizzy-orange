@@ -23,12 +23,20 @@ function link(key) {
   return safeUrl(settings[key]) || (FALLBACK[key] ? safeUrl(settings[FALLBACK[key]]) : "");
 }
 
+// a publication's logo on its ink plate; wide logos sit lower so every logo reads at a similar size
+function logo(p, lazy = false) {
+  const ar = p.logo_w && p.logo_h ? p.logo_w / p.logo_h : 3;
+  const lh = Math.round(Math.min(44, Math.max(14, 46 / Math.cbrt(ar))));
+  const size = p.logo_w && p.logo_h ? ` width="${p.logo_w}" height="${p.logo_h}"` : "";
+  return `<span class="logo-plate" style="--lh:${lh}"><img src="${esc(safeUrl(p.logo))}" alt="${esc(p.outlet)}"${size}${lazy ? ' loading="lazy"' : ""}></span>`;
+}
+
 const blocks = {
   press_hero: () => press.slice(0, 3).map((p) => `          <a class="outlet" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">
-            <span class="brand" data-split>${esc(p.outlet)}</span>
+            ${p.logo ? `<span class="brand">${logo(p)}</span>` : `<span class="brand" data-split>${esc(p.outlet)}</span>`}
             <span class="what">${esc(p.headline)} <span aria-hidden="true">→</span></span>
           </a>`).join("\n") + "\n",
-  press_band: () => press.map((p) => `                <a class="quote" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener"><blockquote><p>${esc(p.outlet)}</p><cite>${esc(p.headline)} <span aria-hidden="true">→</span></cite></blockquote></a>`).join("\n"),
+  press_band: () => press.map((p) => `                <a class="quote" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener"><blockquote>${p.logo ? `<p class="has-logo">${logo(p, true)}</p>` : `<p>${esc(p.outlet)}</p>`}<cite>${esc(p.headline)} <span aria-hidden="true">→</span></cite></blockquote></a>`).join("\n"),
   photos: () => photos.map((ph, i) => `              <figure class="photo ${"abc"[i % 3]}"><img src="${esc(safeUrl(ph.url))}" alt="${esc(ph.alt || ph.caption || "Fizzy Orange")}" loading="lazy"><figcaption>${esc(ph.caption)}</figcaption></figure>`).join("\n") + "\n",
   members: () => String(settings.band_members || "").split(",").map((m) => m.trim()).filter(Boolean).map((m) => `<li>${esc(m)}</li>`).join(""),
   socials: () => [["instagram", "Instagram"], ["spotify", "Spotify"], ["apple_music", "Apple Music"], ["youtube", "YouTube"], ["tiktok", "TikTok"], ["bandcamp", "Bandcamp"]]
@@ -47,10 +55,12 @@ const blocks = {
             <h2 class="big" id="gallery-h">Gallery.</h2>
             <p class="lede">${esc(settings.gallery_intro)}</p>
           </div>
-          <div class="jgrid rv">
+          <div class="jgrid">
 ${gallery.map((g) => {
+  // plain numbers (no calc() maths in CSS), and the small copy in the grid: the full photo opens on tap
   const ar = g.w && g.h ? Math.min(3, Math.max(0.33, g.w / g.h)) : 1;
-  return `            <a href="${esc(safeUrl(g.url))}" style="--ar:${ar.toFixed(4)}" data-caption="${esc(g.caption)}"><i></i><img src="${esc(safeUrl(g.url))}" alt="${esc(g.alt || g.caption || "Fizzy Orange")}" loading="lazy"></a>`;
+  const size = g.w && g.h ? ` width="${g.w}" height="${g.h}"` : "";
+  return `            <a href="${esc(safeUrl(g.url))}" style="--ar:${ar.toFixed(4)};flex-grow:${(ar * 100).toFixed(2)}" data-caption="${esc(g.caption)}"><i style="padding-bottom:${(100 / ar).toFixed(3)}%"></i><img src="${esc(safeUrl(g.thumb) || safeUrl(g.url))}" alt="${esc(g.alt || g.caption || "Fizzy Orange")}"${size} loading="lazy" decoding="async"></a>`;
 }).join("\n")}
           </div>
         </div>

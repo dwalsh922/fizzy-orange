@@ -4,6 +4,9 @@
     "outlet": "Hotpress",
     "headline": "Premiere: Live at Studio 5A",
     "url": "https://www.hotpress.com/culture/premiere-fizzy-orange-live-at-studio-5a-in-the-isle-of-wight-22938762",
+    "logo": "/assets/press/hotpress.png",
+    "logo_w": 215,
+    "logo_h": 115,
     "published": true
   },
   {
@@ -11,6 +14,9 @@
     "outlet": "Wonderland",
     "headline": "\"Infectious rhythm and melodic hooks.\"",
     "url": "https://www.wonderlandmagazine.com/2024/04/04/fizzy-orange/",
+    "logo": "/assets/press/wonderland.svg",
+    "logo_w": 2717,
+    "logo_h": 264,
     "published": true
   },
   {
@@ -18,6 +24,9 @@
     "outlet": "Nialler9",
     "headline": "10 best new Irish tracks of the week",
     "url": "https://nialler9.com/10-best-new-irish-tracks-march-27/",
+    "logo": "/assets/press/nialler9.webp",
+    "logo_w": 250,
+    "logo_h": 58,
     "published": true
   }
 ]
