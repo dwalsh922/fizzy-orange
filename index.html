@@ -52,6 +52,7 @@ if (location.hash) history.replaceState(null, '', location.pathname + location.s
 *,*::before,*::after{box-sizing:border-box}
 html,body,section,nav,footer,header,main{max-width:100vw;overflow-x:hidden;overflow-x:clip}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html.glide{scroll-behavior:auto}   /* the glide moves the page itself */
 body{margin:0;background:var(--peel);color:var(--text-primary);font-family:var(--body);font-size:1.0625rem;line-height:1.55;animation:pagein .9s var(--ease-out) both}
 @keyframes pagein{from{opacity:0}to{opacity:1}}
 img{max-width:100%;height:auto;display:block}
@@ -89,7 +90,7 @@ a{color:inherit}
 .hero-scrub{position:relative;height:850vh;background:var(--paper)}
 .stage{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--paper)}
 .frame{position:absolute;left:50%;top:var(--FY);width:var(--W);height:var(--H);transform:translate(-50%,-50%)}
-.frame .poster,.frame video,.frame .ending{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}
+.frame .poster,.frame video,.frame canvas,.frame .ending{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}
 /* the surround: paper, then peel, feathered over the frame's edges so the video itself never needs a mask */
 .surround{position:absolute;inset:0;pointer-events:none;background:var(--paper);
   -webkit-mask-image:linear-gradient(90deg,#000 calc(50% - var(--W)/2),transparent calc(50% - var(--W)*.465),transparent calc(50% + var(--W)*.465),#000 calc(50% + var(--W)/2)),linear-gradient(180deg,#000 calc(var(--FY) - var(--H)/2),transparent calc(var(--FY) - var(--H)*.455),transparent calc(var(--FY) + var(--H)*.455),#000 calc(var(--FY) + var(--H)/2));
@@ -97,11 +98,12 @@ a{color:inherit}
   -webkit-mask-composite:source-over;mask-composite:add}
 .surround .peelbg{position:absolute;inset:0;background:var(--peel) url("assets/peel.webp") center/cover;opacity:0;will-change:opacity}
 .frame .poster,.frame .ending{opacity:0;transition:opacity .6s var(--ease-soft)}
-.frame video{opacity:0;transition:opacity .5s var(--ease-soft);will-change:transform;transform:translateZ(0)}
+.frame video,.frame canvas{display:block;opacity:0;transition:opacity .5s var(--ease-soft);will-change:transform;transform:translateZ(0)}
+.stage.use-canvas video,.stage:not(.use-canvas) canvas{display:none}
 .stage.landed .poster{opacity:1}
-.stage.video-ready video{opacity:1}
+.stage.video-ready video,.stage.video-ready canvas{opacity:1}
 .stage.video-ready .poster{opacity:0}
-.stage.video-failed video{display:none}
+.stage.video-failed video,.stage.video-failed canvas{display:none}
 .stage.video-failed.late .ending{opacity:1}
 .stage.video-failed.late .poster{opacity:0}
 .dropper{position:absolute;left:29.3%;top:15.28%;width:41.4%;pointer-events:none;animation:drop 1.25s cubic-bezier(.3,0,.4,1) both;animation-delay:.25s}
@@ -460,6 +462,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
         <div class="poster" id="poster"></div>
         <div class="ending" id="ending"></div>
         <video id="hero" preload="none" muted playsinline aria-hidden="true" tabindex="-1"></video>
+        <canvas id="heroCanvas" aria-hidden="true"></canvas>
       </div>
       <div class="surround" aria-hidden="true"><div class="peelbg" id="peelbg"></div></div>
       <div class="frame" aria-hidden="true"><img class="dropper" src="assets/orange-happy.webp" alt="" width="900" height="900"></div>
@@ -797,13 +800,14 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   // two cuts of the same footage: wide for computers, tall for phones and portrait tablets
   // (bytes are the real file sizes, used when Content-Length is missing)
   const HERO = {
-    desk: { video: 'assets/hero-scrub.mp4', bytes: 19564161, poster: 'assets/hero-poster.jpg', ending: 'assets/hero-ending.jpg' },
-    mob: { video: 'assets/hero-scrub-m.mp4', bytes: 7673565, poster: 'assets/hero-poster-m.jpg', ending: 'assets/hero-ending-m.jpg' }
+    desk: { video: 'assets/hero-film.mp4', bytes: 15673383, poster: 'assets/hero-poster.jpg', ending: 'assets/hero-ending.jpg' },
+    mob: { video: 'assets/hero-film-m.mp4', bytes: 6752409, poster: 'assets/hero-poster-m.jpg', ending: 'assets/hero-ending-m.jpg' }
   };
   const PEEL_IN = [0.31, 0.39];          // where the footage's backdrop turns from paper to peel
   const heroSec = document.querySelector('.hero-scrub');
   const stage = document.getElementById('stage');
   const video = document.getElementById('hero');
+  const canvas = document.getElementById('heroCanvas');
   const ring = stage.querySelector('.ring circle:last-child');
   const posterEl = document.getElementById('poster');
   const endingEl = document.getElementById('ending');
@@ -890,7 +894,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     heroRange = Math.max(1, heroSec.offsetHeight - innerHeight);
   }
   function heroProgress(){ return clamp((scrollY - heroTop) / heroRange, 0, 1); }
-  addEventListener('resize', () => { measureHero(); if (scrubOn) onScroll(); });
+  addEventListener('resize', () => { measureHero(); if (filmOn) sizeFilm(); if (scrubOn) onScroll(); });
 
   function updateCaptions(p){
     bands.forEach((band, i) => {
@@ -912,10 +916,185 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     if (late !== stage._late) { stage._late = late; stage.classList.toggle('late', late); }
   }
 
-  // seek gating
-  // the footage is drawn at 15 frames a second, cartoon style: snap every seek to the middle
-  // of a whole frame, and skip it entirely when that frame is already on screen
-  const FPS = 15;
+  /* ================= the film =================
+     360 frames, 30 a second, drawn to a canvas. The browser's own video decoder (WebCodecs) turns
+     frames out of the downloaded file as the scroll needs them, so the picture follows with no
+     seeking delay, neighbouring frames blend while it moves, and it settles on a crisp whole frame
+     at rest. Browsers without WebCodecs seek the <video> instead. */
+  const FRAMES = 360, FPS = 30;
+
+  // just enough of an MP4 reader for our own files: where each frame's bytes are, which frames are
+  // keyframes, and the codec settings the decoder needs
+  function readMp4(buf){
+    const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const tag = o => String.fromCharCode(buf[o], buf[o + 1], buf[o + 2], buf[o + 3]);
+    function kids(start, end){
+      const out = {};
+      for (let o = start; o + 8 <= end;) {
+        let size = dv.getUint32(o), head = 8;
+        if (size === 1) { size = Number(dv.getBigUint64(o + 8)); head = 16; } else if (size === 0) size = end - o;
+        if (size < head) break;
+        (out[tag(o + 4)] = out[tag(o + 4)] || []).push({ start: o + head, end: o + size });
+        o += size;
+      }
+      return out;
+    }
+    const one = (box, name) => { const k = kids(box.start, box.end)[name]; if (!k) throw new Error('mp4: no ' + name); return k[0]; };
+    const moov = kids(0, buf.length).moov[0];
+    for (const trak of kids(moov.start, moov.end).trak || []) {
+      const mdia = one(trak, 'mdia');
+      if (tag(one(mdia, 'hdlr').start + 8) !== 'vide') continue;
+      const stbl = one(one(mdia, 'minf'), 'stbl');
+      const stsd = one(stbl, 'stsd'), entry = kids(stsd.start + 8, stsd.end).avc1[0];
+      const avcC = kids(entry.start + 78, entry.end).avcC[0];
+      const description = buf.slice(avcC.start, avcC.end);
+      const hex = b => b.toString(16).padStart(2, '0');
+      const codec = 'avc1.' + hex(description[1]) + hex(description[2]) + hex(description[3]);
+      const width = dv.getUint16(entry.start + 24), height = dv.getUint16(entry.start + 26);
+      const stsz = one(stbl, 'stsz'), fixed = dv.getUint32(stsz.start + 4), count = dv.getUint32(stsz.start + 8);
+      const sizes = Array.from({ length: count }, (_, i) => fixed || dv.getUint32(stsz.start + 12 + i * 4));
+      const box = kids(stbl.start, stbl.end);
+      let offsets;
+      if (box.stco) { const b = box.stco[0], n = dv.getUint32(b.start + 4); offsets = Array.from({ length: n }, (_, i) => dv.getUint32(b.start + 8 + i * 4)); }
+      else { const b = box.co64[0], n = dv.getUint32(b.start + 4); offsets = Array.from({ length: n }, (_, i) => Number(dv.getBigUint64(b.start + 8 + i * 8))); }
+      const stsc = one(stbl, 'stsc'), runs = Array.from({ length: dv.getUint32(stsc.start + 4) }, (_, i) => ({ first: dv.getUint32(stsc.start + 8 + i * 12), per: dv.getUint32(stsc.start + 12 + i * 12) }));
+      const keys = new Set();
+      if (box.stss) { const b = box.stss[0], n = dv.getUint32(b.start + 4); for (let i = 0; i < n; i++) keys.add(dv.getUint32(b.start + 8 + i * 4) - 1); }
+      const samples = [];
+      let si = 0;
+      offsets.forEach((off, c) => {
+        let per = runs[0].per;
+        for (const r of runs) if (c + 1 >= r.first) per = r.per;
+        for (let k = 0; k < per && si < count; k++, si++) { samples.push({ off, size: sizes[si], key: box.stss ? keys.has(si) : true }); off += sizes[si]; }
+      });
+      return { codec, description, width, height, samples };
+    }
+    throw new Error('mp4: no video');
+  }
+
+  const cx = canvas.getContext('2d', { alpha: false });
+  let heroBuf = null, filmOn = false, dec = null, decCfg = null, fs = null, fedTo = -1, needKey = true, flushTimer = 0, drawnF = -1, filmShown = false;
+  const cache = new Map();            // frame number -> decoded picture (ImageBitmap)
+  const inflight = new Set();         // frames handed to the decoder and not back yet
+  let CAP = 16;                       // decoded frames kept: more than one run of 10 between keyframes
+  let fw = 0, fh = 0, bw = 0, bh = 0; // the film's own size, and the size frames are kept and drawn at
+
+  async function startFilm(buf){
+    if (!('VideoDecoder' in window) || !('EncodedVideoChunk' in window) || !('createImageBitmap' in window)) return false;
+    let info;
+    try { info = readMp4(buf); } catch (_) { return false; }
+    const config = { codec: info.codec, description: info.description, codedWidth: info.width, codedHeight: info.height, optimizeForLatency: true };
+    try { if (!(await VideoDecoder.isConfigSupported(config)).supported) return false; } catch (_) { return false; }
+    fs = info.samples;
+    if (fs.length < FRAMES) return false;
+    fw = info.width; fh = info.height;
+    sizeFilm();
+
+    dec = new VideoDecoder({ output: gotFrame, error: filmBroke });
+    dec.configure(decCfg = config);
+    fedTo = -1; needKey = true; drawnF = -1; filmShown = false; filmOn = true;
+    return true;
+  }
+  // frames are kept, and the canvas drawn, at the size the screen shows them (at most the film's own),
+  // so every frame is drawn once at 1:1: a 1440px laptop shows the wide cut about 1600px across
+  function sizeFilm(){
+    const box = canvas.parentElement.getBoundingClientRect();
+    const k = Math.min(1, (box.width * (devicePixelRatio || 1)) / fw);
+    const w = Math.max(2, Math.round(fw * k)), h = Math.max(2, Math.round(fh * k));
+    if (w === bw && h === bh) return;
+    bw = canvas.width = w; bh = canvas.height = h;
+    CAP = clamp(Math.floor(150e6 / (w * h * 4)), 16, 28);   // about 150 MB of decoded frames
+    cx.imageSmoothingQuality = 'high';
+    if (filmShown) drawFilm(fd, true);
+  }
+  function stopFilm(){
+    filmOn = false;
+    clearTimeout(flushTimer);
+    if (dec && dec.state !== 'closed') { try { dec.close(); } catch (_) {} }
+    dec = null; fs = null;
+    cache.forEach(b => b.close()); cache.clear(); inflight.clear();
+    stage.classList.remove('use-canvas');
+  }
+  function filmBroke(){
+    // the decoder gave up (a driver problem, say): carry on with the video element instead
+    if (!filmOn) return;
+    stopFilm();
+    if (heroBuf) useVideo(heroBuf, loadToken);
+  }
+  function gotFrame(frame){
+    const i = Math.round(frame.timestamp / 1000);
+    if (!filmOn || cache.has(i)) { frame.close(); inflight.delete(i); return; }
+    // copy it out and hand the frame straight back, so the decoder never runs short of buffers
+    const opts = bw < frame.displayWidth ? { resizeWidth: bw, resizeHeight: bh, resizeQuality: 'high' } : undefined;
+    createImageBitmap(frame, opts).then(bmp => {
+      frame.close(); inflight.delete(i);
+      if (!filmOn || cache.has(i)) { bmp.close(); return; }
+      cache.set(i, bmp);
+      // over the limit: let go of frames already scrolled past before the ones coming up
+      while (cache.size > CAP) {
+        let far = -1, worst = -1;
+        for (const k of cache.keys()) { const d = (k - fd) * dir, score = d < 0 ? -d * 2 : d; if (score > worst) { worst = score; far = k; } }
+        cache.get(far).close(); cache.delete(far);
+      }
+      if (Math.abs(i - fd) < 2) drawFilm(fd, true);     // the frame the picture was waiting for
+    }).catch(() => { frame.close(); inflight.delete(i); });
+  }
+  const keyBefore = i => { while (i > 0 && !fs[i].key) i--; return i; };
+  // make sure frame i gets decoded: carry on from the last frame fed if that's cheaper,
+  // otherwise start again at the keyframe before it
+  function need(i){
+    if (!filmOn || i < 0 || i >= FRAMES || cache.has(i) || inflight.has(i) || dec.state !== 'configured') return;
+    if (dec.decodeQueueSize > 12) {
+      // busy: if it's still working on frames the page has already left behind (a fast flick), drop them
+      // and jump straight to the keyframe before where the page is now; otherwise the loop asks again
+      let near = false;
+      const here = Math.round(fd);
+      for (const j of inflight) if (Math.abs(j - i) <= 12 || Math.abs(j - here) <= 12) { near = true; break; }
+      if (near) return;
+      dec.reset(); dec.configure(decCfg); inflight.clear(); needKey = true;
+    }
+    const k = keyBefore(i);
+    const from = !needKey && i > fedTo && i - fedTo <= i - k + 1 ? fedTo + 1 : k;
+    // scrolling back up, every frame of this run of 10 will be wanted: decode it in one pass,
+    // up to the frames already in hand, rather than coming back for the top of it later
+    let to = i;
+    if (dir < 0 && from === k) while (to + 1 < FRAMES && !fs[to + 1].key && !cache.has(to + 1) && !inflight.has(to + 1)) to++;
+    for (let j = from; j <= to; j++) {
+      const smp = fs[j];
+      dec.decode(new EncodedVideoChunk({ type: smp.key ? 'key' : 'delta', timestamp: j * 1000, data: heroBuf.subarray(smp.off, smp.off + smp.size) }));
+      inflight.add(j);
+    }
+    fedTo = to; needKey = false;
+    // a safety net for decoders that hold the last frame back until told nothing more is coming
+    // (Chrome hands every frame straight back, so this rarely fires)
+    clearTimeout(flushTimer);
+    flushTimer = setTimeout(() => { if (filmOn && inflight.has(Math.round(fd)) && dec.state === 'configured') { needKey = true; dec.flush().catch(() => {}); } }, 400);
+  }
+  function nearestCached(i){
+    let best = -1, dist = Infinity;
+    for (const k of cache.keys()) { const d = Math.abs(k - i); if (d < dist) { dist = d; best = k; } }
+    return best;
+  }
+  function drawFilm(f, force){
+    if (!filmOn) return;
+    if (!force && Math.abs(f - drawnF) < 0.002) return;
+    const i0 = Math.floor(f), a = f - i0;
+    const A = cache.get(i0), B = a > 0.02 && i0 + 1 < FRAMES ? cache.get(i0 + 1) : null;
+    const base = A ? i0 : nearestCached(Math.round(f));
+    if (base < 0) return;
+    cx.globalAlpha = 1;
+    cx.drawImage(cache.get(base), 0, 0, canvas.width, canvas.height);
+    if (A && B) { cx.globalAlpha = a; cx.drawImage(B, 0, 0, canvas.width, canvas.height); cx.globalAlpha = 1; }
+    // a stand-in frame is redrawn when the right one lands
+    drawnF = A && (B || a <= 0.02) ? f : -1;
+    if (!filmShown) { filmShown = true; revealFilm(); }
+  }
+  function revealFilm(){
+    const reveal = () => stage.classList.add('video-ready');
+    stage.classList.contains('landed') ? reveal() : setTimeout(reveal, 1500);
+  }
+
+  // the fallback: seek the video element to whole frames, skipping frames already on screen
   let seekBusy = false, pendingTime = null, lastFrame = -1;
   function requestSeek(t){
     if (!video.duration) return;
@@ -928,19 +1107,41 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     seekBusy = false;
     if (pendingTime !== null) { const t = pendingTime; pendingTime = null; requestSeek(t); }
   });
-  video.addEventListener('error', () => { seekBusy = false; pendingTime = null; failVideo(); });
+  video.addEventListener('error', () => { seekBusy = false; pendingTime = null; if (!filmOn) failVideo(); });
 
-  // eased display time, a loop that rests
-  let target = 0, shown = 0, rafId = null, lastTick = 0, heroOnScreen = true;
+  /* Two eases in one loop that rests, as on the SureClick site: the film's progress trails the
+     (gliding) page so it drifts on for a moment, and when everything stops the picture settles
+     onto the nearest whole frame. */
+  let target = 0, shown = 0, fd = 0, dir = 1, speed = 0, rafId = null, lastTick = 0, heroOnScreen = true;
   function tick(now){
     const dt = Math.min(100, now - (lastTick || now)); lastTick = now;
-    const k = loadedMode === 'mob' ? 0.32 : 0.16;   // touch scrolling already glides, so phones get lighter easing
-    shown += (target - shown) * (1 - Math.pow(1 - k, dt / 16.667));
-    let busy = Math.abs(target - shown) >= 0.0005;
-    if (!busy) shown = target;
-    requestSeek(shown * (video.duration || 0));
+    const ease = n => 1 - Math.pow(1 - n, dt / 16.667);
+    shown += (target - shown) * ease(loadedMode === 'mob' ? 0.22 : 0.1);   // phones keep a little more grip under the finger
+    const resting = Math.abs(target - shown) < 0.0005;
+    if (resting) shown = target;
+    const goal = resting ? Math.round(shown * (FRAMES - 1)) : shown * (FRAMES - 1);
+    const was = fd;
+    fd += (goal - fd) * ease(resting ? 0.18 : 0.5);
+    const settled = resting && Math.abs(goal - fd) < 0.01;
+    if (settled) fd = goal;
+    if (fd !== was) dir = fd > was ? 1 : -1;
+    speed = Math.abs(fd - was);
+    showFilm(settled);
     updateCaptions(shown);
-    if (busy) rafId = requestAnimationFrame(tick); else { rafId = null; lastTick = 0; }
+    if (settled) { rafId = null; lastTick = 0; } else rafId = requestAnimationFrame(tick);
+  }
+  function showFilm(atRest){
+    if (!filmOn) { requestSeek(fd / FPS); return; }
+    const i0 = Math.floor(fd);
+    need(i0);
+    if (fd - i0 > 0.02) need(i0 + 1);
+    // decode ahead in the direction of travel, further the faster it's going; going backwards,
+    // start on the previous run of 10 early
+    const ahead = Math.min(12, 3 + Math.round(speed * 3));
+    need(clamp(i0 + (dir > 0 ? ahead : -3 - ahead), 0, FRAMES - 1));
+    // at rest, have a few frames ready either way
+    if (atRest) { need(clamp(i0 + 3, 0, FRAMES - 1)); need(clamp(i0 - 3, 0, FRAMES - 1)); }
+    drawFilm(fd);
   }
   function kick(){ if (rafId === null && heroOnScreen && scrubOn) rafId = requestAnimationFrame(tick); }
   function onScroll(){ target = heroProgress(); kick(); }
@@ -953,7 +1154,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
   // the drop, then the hand-over to the footage
   function landed(){ stage.classList.add('landed'); kick(); }
 
-  // blob loader with an honest ring; one load per cut, and a rotation that changes the cut swaps it
+  // the loader: one download per cut with an honest ring; a rotation that changes the cut swaps it
   let loadedMode = null, heroCtrl = null, blobUrl = null, loadToken = 0;
   async function loadHeroBlob(cut, token){
     const ctrl = heroCtrl = new AbortController();
@@ -974,18 +1175,31 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     clearTimeout(watchdog);
     if (token !== loadToken) return;               // the cut changed while this one was loading
     ring.style.setProperty('--ld', 0);
+    const buf = new Uint8Array(got);
+    let at = 0; for (const c of chunks) { buf.set(c, at); at += c.length; }
+    heroBuf = buf;
+    if (await startFilm(buf)) {
+      if (token !== loadToken) { stopFilm(); return; }
+      stage.classList.add('use-canvas');
+      fd = shown * (FRAMES - 1);
+      need(Math.round(fd));
+      kick();
+      return;
+    }
+    if (token === loadToken) useVideo(buf, token);
+  }
+  function useVideo(buf, token){
     if (blobUrl) URL.revokeObjectURL(blobUrl);
-    blobUrl = URL.createObjectURL(new Blob(chunks, { type: 'video/mp4' }));
+    blobUrl = URL.createObjectURL(new Blob([buf], { type: 'video/mp4' }));
     video.src = blobUrl;
     video.load();
     video.addEventListener('canplay', () => {
       if (token !== loadToken) return;
       // phones (iPhones especially) only paint seeked frames once the video has played for a moment
-      const settle = () => { lastFrame = -1; seekBusy = false; pendingTime = null; requestSeek(heroProgress() * video.duration); };
+      const settle = () => { lastFrame = -1; seekBusy = false; pendingTime = null; requestSeek(fd / FPS); };
       const pr = video.play();
       if (pr && pr.then) pr.then(() => { video.pause(); settle(); }).catch(settle); else { video.pause(); settle(); }
-      const reveal = () => stage.classList.add('video-ready');
-      stage.classList.contains('landed') ? reveal() : setTimeout(reveal, 1500);
+      revealFilm();
     }, { once: true });
   }
   function failVideo(){ stage.classList.add('video-failed'); }
@@ -996,6 +1210,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     loadedMode = mode;
     const cut = HERO[mode], token = ++loadToken;
     if (heroCtrl) heroCtrl.abort();
+    stopFilm(); heroBuf = null;
     stage.classList.remove('video-ready', 'video-failed');
     ring.style.setProperty('--ld', 126);
     posterEl.style.backgroundImage = `url('${cut.poster}')`;
@@ -1037,6 +1252,7 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     bands.forEach(b => { b.op = -1; b.k = -1; b.vis = null; });
     unpinFinalStates();
     target = shown = heroProgress();
+    fd = shown * (FRAMES - 1);
     updateCaptions(shown);
     document.body.classList.toggle('hero-on', heroOnScreen);
     onScroll();
@@ -1197,7 +1413,97 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
 
   /* mailing list sign-up: assets/signup.js */
 
-  /* ================= in-page links: scroll, but leave the address bar alone ================= */
+  /* ================= the glide =================
+     Inertial page scrolling for mouse and trackpad, as on the SureClick site: the wheel moves a
+     target and the page eases toward it, so the page (and the film scrubbed off it) carries on for
+     a beat after the visitor stops. Touch screens keep their own momentum; reduced motion keeps
+     plain scrolling. */
+  const FINE = matchMedia('(hover: hover) and (pointer: fine)');
+  const glide = (() => {
+    const LERP = 0.075;              // share of the gap closed per 60fps frame; lower glides longer
+    const easeInOut = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    let on = false, raf = null, last = 0, lastSet = -1, aim = 0, now_ = 0, tween = null;
+    const maxScroll = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    function frame(t){
+      const dt = Math.min(64, t - (last || t)); last = t;
+      let done;
+      if (tween) {
+        const k = clamp((t - tween.t0) / tween.dur, 0, 1);
+        now_ = tween.from + (tween.to - tween.from) * easeInOut(k);
+        aim = now_; done = k >= 1;
+        if (done) {
+          // late-loading content can move the destination: settle where it is now
+          const fix = tween.where ? clamp(tween.where(), 0, maxScroll()) : now_;
+          tween = null;
+          if (Math.abs(fix - now_) > 1) { aim = fix; done = false; }
+        }
+      } else {
+        now_ += (aim - now_) * (1 - Math.pow(1 - LERP, dt / 16.667));
+        done = Math.abs(aim - now_) < 0.4;
+        if (done) now_ = aim;
+      }
+      lastSet = Math.round(now_);
+      scrollTo(0, now_);
+      if (done) { raf = null; last = 0; } else raf = requestAnimationFrame(frame);
+    }
+    const go = () => { if (raf === null) raf = requestAnimationFrame(frame); };
+    function scrollsInside(el, dy){
+      for (; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        const oy = getComputedStyle(el).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
+          if (dy < 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1) return true;
+        }
+      }
+      return false;
+    }
+    function onWheel(e){
+      if (e.ctrlKey || e.defaultPrevented || document.querySelector('dialog[open]')) return;
+      let dy = e.deltaY;
+      if (Math.abs(e.deltaX) > Math.abs(dy)) return;
+      if (e.deltaMode === 1) dy *= 40; else if (e.deltaMode === 2) dy *= innerHeight;
+      if (scrollsInside(e.target, dy)) return;
+      e.preventDefault();
+      if (raf === null) now_ = aim = scrollY;
+      if (tween) { tween = null; aim = now_; }
+      aim = clamp(aim + dy, 0, maxScroll());
+      go();
+    }
+    function onScrolled(){
+      // the keyboard, the scrollbar or find-in-page moved the page: follow it, never fight it
+      if (Math.abs(scrollY - lastSet) > 2) {
+        if (raf !== null) { cancelAnimationFrame(raf); raf = null; last = 0; }
+        tween = null; now_ = aim = lastSet = scrollY;
+      }
+    }
+    function to(where){
+      const y = clamp(where(), 0, maxScroll());
+      if (!on) { scrollTo({ top: y }); return; }
+      const from = raf === null ? scrollY : now_;
+      tween = { from, to: y, where, t0: performance.now(), dur: clamp(700 + Math.abs(y - from) * 0.12, 800, 2000) };
+      last = 0; go();
+    }
+    function enable(){
+      if (on) return; on = true;
+      document.documentElement.classList.add('glide');
+      now_ = aim = lastSet = scrollY;
+      addEventListener('wheel', onWheel, { passive: false });
+      addEventListener('scroll', onScrolled, { passive: true });
+    }
+    function disable(){
+      if (!on) return; on = false;
+      document.documentElement.classList.remove('glide');
+      removeEventListener('wheel', onWheel);
+      removeEventListener('scroll', onScrolled);
+      if (raf !== null) { cancelAnimationFrame(raf); raf = null; last = 0; }
+      tween = null;
+    }
+    return { enable, disable, to, get on(){ return on; } };
+  })();
+  const applyGlide = () => (FINE.matches && !RM.matches ? glide.enable() : glide.disable());
+  FINE.addEventListener('change', applyGlide);
+  RM.addEventListener('change', applyGlide);
+
+  /* ================= in-page links: glide there, and leave the address bar alone ================= */
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href^="#"]');
     if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -1205,13 +1511,16 @@ body.paused *,body.paused *::before,body.paused *::after{animation-play-state:pa
     const el = id && id !== 'top' ? document.getElementById(id) : null;
     if (id && id !== 'top' && !el) return;
     e.preventDefault();
-    if (el) el.scrollIntoView({ block: 'start' }); else scrollTo({ top: 0 });
+    // where the section starts, less the room it leaves for the menu bar (measured again on arrival)
+    const where = el ? () => el.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0) : () => 0;
+    if (glide.on) glide.to(where); else if (el) el.scrollIntoView({ block: 'start' }); else scrollTo({ top: 0 });
     // keyboard users land where they were sent
     if (e.detail === 0) { const t = el || document.getElementById('main'); if (!t.hasAttribute('tabindex')) t.setAttribute('tabindex', '-1'); t.focus({ preventScroll: true }); }
   });
   scrollTo({ top: 0, behavior: 'instant' });
 
   /* ================= go ================= */
+  applyGlide();
   applyHeroMode();
   if (RM.matches) pinToFinalStates();
   drawRibbon();
