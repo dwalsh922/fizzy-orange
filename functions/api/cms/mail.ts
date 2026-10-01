@@ -1,6 +1,6 @@
 import { json, type Data, type Env } from "../../_lib/env";
 import { ensureList, newToken, ON_LIST } from "../../_lib/list";
-import { awsAuth, hookKey, provider, resend, sender, sendMany, type Msg } from "../../_lib/mailer";
+import { awsAuth, hookKey, provider, resend, sender, senderProblem, sendMany, type Msg } from "../../_lib/mailer";
 import { fillSubject, hasUnsubscribe, personalise, toText } from "../../_lib/mailrender";
 
 // The admin's email designer and sender.
@@ -29,7 +29,7 @@ async function status(env: Env, origin: string) {
       hook = made.ok;
       if (hook) await env.DB!.prepare("INSERT OR REPLACE INTO mail_config (key, value) VALUES ('resend_hook', ?)").bind(hookUrl).run();
     }
-    return { provider: p, ok: true, domain, domainStatus: mine?.status ?? "missing", hook };
+    return { provider: p, ok: true, senderProblem: senderProblem(), domain, domainStatus: mine?.status ?? "missing", hook };
   }
   if (p === "ses") {
     const region = env.AWS_REGION || "eu-west-1", host = `email.${region}.amazonaws.com`, path = "/v2/email/account";
@@ -39,14 +39,14 @@ async function status(env: Env, origin: string) {
       const r = await fetch((env.MAIL_API_BASE || `https://${host}`) + path, { headers: { "x-amz-date": amzDate, authorization } });
       if (r.ok) {
         const a = (await r.json()) as { ProductionAccessEnabled?: boolean; SendQuota?: { Max24HourSend?: number; SentLast24Hours?: number } };
-        return { provider: p, ok: true, region, production: !!a.ProductionAccessEnabled, perDay: a.SendQuota?.Max24HourSend ?? null, sentToday: a.SendQuota?.SentLast24Hours ?? null, hookUrl: `${origin}/api/mail-hook?k=${await hookKey(env)}` };
+        return { provider: p, ok: true, senderProblem: senderProblem(), region, production: !!a.ProductionAccessEnabled, perDay: a.SendQuota?.Max24HourSend ?? null, sentToday: a.SendQuota?.SentLast24Hours ?? null, hookUrl: `${origin}/api/mail-hook?k=${await hookKey(env)}` };
       }
       if (r.status === 403) {
         const t = await r.text();
         if (/InvalidClientTokenId|SignatureDoesNotMatch|UnrecognizedClient/i.test(t)) return { provider: p, ok: false, message: "Amazon didn't accept the access keys. Check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in Cloudflare." };
       }
     } catch { /* fall through: the keys may simply not be allowed to read the account */ }
-    return { provider: p, ok: true, region, production: null, perDay: null, sentToday: null, hookUrl: `${origin}/api/mail-hook?k=${await hookKey(env)}` };
+    return { provider: p, ok: true, senderProblem: senderProblem(), region, production: null, perDay: null, sentToday: null, hookUrl: `${origin}/api/mail-hook?k=${await hookKey(env)}` };
   }
   return { provider: null, ok: false };
 }
@@ -141,18 +141,23 @@ export const onRequestPost: PagesFunction<Env, string, Data> = async ({ request,
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return json({ ok: false, message: "That test address doesn't look right." }, 400);
     const html = personalise(d.html, { name: SAMPLE, unsubUrl: `${origin}/unsubscribe/`, preheader: d.preheader });
     const msg: Msg = { to, subject: `[Test] ${fillSubject(d.subject, SAMPLE)}`, html, text: toText(html) };
-    let [r] = await sendMany(env, [msg]);
-    let viaTester = false;
-    // Resend, before the sending domain is verified: its own test sender works, but only to the account owner's inbox
-    if (!r.ok && p === "resend" && /domain|verif|not allowed|own email/i.test(r.message)) { [r] = await sendMany(env, [msg], "onboarding@resend.dev"); viaTester = r.ok; }
-    if (r.ok) return json({ ok: true, message: `Test sent to ${to}${viaTester ? ", from Resend's test address (your own domain isn't verified yet)" : ""}. "${SAMPLE}" stands in for each fan's first name.` });
-    const hint = p === "resend" && /testing emails|own email|verif|domain/i.test(r.message) ? " Until your domain is verified in Resend, tests can only go to the email address you signed up to Resend with." : "";
+    // Resend lends a test sender (onboarding@resend.dev) that delivers only to the account owner's own inbox.
+    // It's used when there's no sending address yet, or the address's domain isn't verified.
+    const noSender = !!senderProblem();
+    if (noSender && p !== "resend") return json({ ok: false, message: senderProblem() }, 400);
+    let viaTester = noSender;
+    let [r] = await sendMany(env, [msg], noSender ? "onboarding@resend.dev" : undefined);
+    if (!r.ok && !noSender && p === "resend" && /domain|verif|not allowed|own email/i.test(r.message)) { [r] = await sendMany(env, [msg], "onboarding@resend.dev"); viaTester = r.ok; }
+    if (r.ok) return json({ ok: true, message: `Test sent to ${to}${viaTester ? ", from Resend's test address" : ""}. "${SAMPLE}" stands in for each fan's first name.` });
+    const hint = p === "resend" && /testing emails|own email|verif|domain/i.test(r.message) ? " Until a sending domain is verified in Resend, tests can only go to the email address you signed up to Resend with." : "";
     return json({ ok: false, message: `${r.message}${hint}` }, 502);
   }
 
   if (b.action === "create") {
     const d = await db.prepare("SELECT id, name, subject, preheader, html FROM mail_designs WHERE id = ?").bind(String(b.id ?? "")).first<{ id: string; name: string; subject: string; preheader: string; html: string }>();
     if (!d) return json({ ok: false, message: "Save the email first." }, 404);
+    const problem = senderProblem();
+    if (problem) return json({ ok: false, message: `${problem} Until then you can still send tests to your own address.` }, 400);
     if (!d.subject.trim()) return json({ ok: false, message: "Add a subject line first." }, 400);
     if (!d.html || d.html.length < 20) return json({ ok: false, message: "The email is empty. Add something to it first." }, 400);
     const id = newToken().slice(0, 16);

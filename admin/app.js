@@ -491,7 +491,7 @@ const TEXT = [
   ["Top of the page", null, [["kicker", "Small line above the logo", "Shown on phones held sideways and for visitors who turn animations off."], ["tagline", "Tagline", "Under the logo at the end of the scroll animation."], ["gigs_hero_line", "Gig box when there are no dates", "When a gig is added, this is replaced by the next date automatically."]]],
   ["Latest release", "Your newest album or single. It fills the Spotify box in the scroll animation and the whole Listen section, including the player.", [["release_title", "Title"], ["release_line", "One line about it", "Used in the scroll animation."], ["release_url", "Spotify link", "The album or single's Spotify page. The player on the site plays this."], ["release_apple", "Apple Music link", "Leave blank to use your Apple Music artist page."], ["release_bandcamp", "Bandcamp link", "Leave blank to use your Bandcamp page."], ["release_tracks", "Tracklist", "One song per line, with the length after a bar, e.g.  Old Dog | 3:24", true]]],
   ["Section intros", null, [["gigs_intro", "Gigs"], ["gigs_empty", "Gigs, when there are no dates"], ["listen_intro", "Listen", null, true], ["band_intro", "The band", null, true], ["band_members", "Band members", "Separate names with commas."], ["list_intro", "Mailing list"], ["book_intro", "Bookings"], ["gallery_intro", "Gallery"]]],
-  ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["list_sender", "Mailing list emails come from", "Its domain has to be verified with the email service (see the Mailing list page)."], ["list_sender_name", "Sender name on those emails", "What fans see in their inbox, e.g. Fizzy Orange."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
+  ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["list_sender", "Mailing list emails come from", "An address on a domain you've verified with the email service (see the Mailing list page). It can't be a Gmail or Outlook.com address."], ["list_reply_to", "Replies to those emails go to", "Leave blank to use the address above. This one can be any inbox, Gmail included."], ["list_sender_name", "Sender name on those emails", "What fans see in their inbox, e.g. Fizzy Orange."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
 ];
 const LINKS = ["release_url", "release_apple", "release_bandcamp", "instagram", "spotify", "apple_music", "bandcamp", "youtube", "tiktok"];
 
@@ -501,13 +501,15 @@ function SettingsPanel() {
   const input = (k, long) => {
     const on = (e) => { f[k] = e.target.value; bar.dirty(true); };
     if (long) return h("textarea", { style: { minHeight: "120px" }, value: f[k] ?? "", onInput: on });
-    return h("input", { value: f[k] ?? "", type: k === "email" || k === "list_sender" ? "email" : LINKS.includes(k) ? "url" : "text", placeholder: LINKS.includes(k) ? "https://" : null, onInput: on });
+    return h("input", { value: f[k] ?? "", type: k === "email" || k === "list_sender" || k === "list_reply_to" ? "email" : LINKS.includes(k) ? "url" : "text", placeholder: LINKS.includes(k) ? "https://" : null, onInput: on });
   };
   async function onSave() {
     const bad = LINKS.map((k) => f[k]).find((u) => u && !/^https:\/\//.test(u.trim()));
     if (bad) return show(`Links need to start with https:// (check "${bad}").`, "err");
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return show("The contact email doesn't look right.", "err");
-    if (f.list_sender && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.list_sender.trim())) return show("The mailing list sender address doesn't look right.", "err");
+    for (const [k, what] of [["list_sender", "mailing list sender"], ["list_reply_to", "reply-to"]]) {
+      if (f[k] && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f[k].trim())) return show(`The ${what} address doesn't look right.`, "err");
+    }
     bar.busy(true);
     try { await save("settings", Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v).trim()])), "update the website text"); bar.dirty(false); show(LIVE); }
     catch (x) { show(x.message, "err"); } finally { bar.busy(false); }
@@ -630,7 +632,8 @@ function EmailsCard(mail, reload) {
 
 /** Which email service is connected, what's left to set up, and the plan for a bigger list. */
 function SendingCard(mail) {
-  const st = mail.status, from = mail.sender, domain = (from.email.split("@")[1] || "your domain");
+  const st = mail.status, from = mail.sender, domain = (from.email.split("@")[1] || "the band's domain");
+  const fromText = from.email || "the band's own address";
   const tick = (ok, yes, no) => h("li", { style: { display: "flex", gap: "10px", alignItems: "baseline" } },
     h("span", { "aria-hidden": "true", style: { color: ok ? "#2f7a3a" : "var(--danger)", fontWeight: 700 } }, ok ? "✓" : "✗"), h("span", null, ok ? yes : no));
   const steps = (...items) => h("ol", { style: { margin: "10px 0 0", paddingLeft: "20px", lineHeight: 1.55, display: "grid", gap: "6px" } }, items.map((x) => h("li", null, x)));
@@ -641,7 +644,7 @@ function SendingCard(mail) {
     h("p", { style: { margin: "10px 0 0" } }, "Resend's free plan sends 100 emails a day, so a list of 300 takes three days per email. Amazon SES sends them all at once for a few cents. The designer, the list and everything here stay the same: only the delivery changes."),
     steps(
       ["Create an account at ", h("a", { href: "https://aws.amazon.com/ses/", target: "_blank", rel: "noopener" }, "aws.amazon.com"), " (it asks for a card; you're only charged for what you send)."],
-      ["Open ", b("Amazon SES"), ", choose the region ", b("Europe (Ireland)"), ", and verify the domain ", b(domain), ". It gives DNS records to add in GoDaddy, like Resend's."],
+      ["Open ", b("Amazon SES"), ", choose the region ", b("Europe (Ireland)"), ", and verify the domain ", b(domain), ". It gives DNS records to add where that domain is managed, like Resend's."],
       ["Still in SES, ", b("request production access"), " (a short form about what you send; Amazon usually answers within a day). Until then SES only delivers to addresses you've verified."],
       ["In ", b("IAM"), ", create a user with the ", b("AmazonSESFullAccess"), " permission and create an ", b("access key"), " for it."],
       [cf, " Add two Secrets, ", b("AWS_ACCESS_KEY_ID"), " and ", b("AWS_SECRET_ACCESS_KEY"), ", and a plain Text value ", b("AWS_REGION"), " = eu-west-1. Then Deployments → latest → Retry deployment."],
@@ -654,19 +657,20 @@ function SendingCard(mail) {
         ["In Resend, open ", b("API Keys"), " → ", b("Create API key"), " with ", b("Full access"), ". Copy it."],
         [cf, " Type: ", b("Secret"), ". Name: ", b("RESEND_API_KEY"), ". Paste the key and save."],
         ["Deployments → the latest one → ⋯ → Retry deployment. Reload this page. You can now send tests to your own address."],
-        ["To send to fans from ", b(from.email), ": in Resend open ", b("Domains → Add domain"), ", enter ", b(domain), ", add the DNS records it shows in GoDaddy, then press ", b("Verify"), "."]),
+        ["To send to fans from ", b(fromText), ": in Resend open ", b("Domains → Add domain"), ", enter ", b(domain), ", add the DNS records it shows wherever that domain is managed, then press ", b("Verify"), ". The address is set under Website text."]),
       sesPlan);
   }
   if (!st.ok) return Card("Email sending", null, h("p", { class: "a-note a-note--warn", style: { margin: 0 } }, st.message || "The email service didn't answer. Reload the page to try again."));
 
   if (st.provider === "resend") {
-    const verified = st.domainStatus === "verified";
+    const verified = !st.senderProblem && st.domainStatus === "verified";
     return Card("Email sending: Resend", null,
       h("ul", { style: { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "6px" } },
-        tick(true, "Connected to Resend. You can send test emails.", ""),
+        tick(true, "Connected to Resend. Send a test works to the email address you signed up to Resend with.", ""),
         tick(verified, `${domain} is verified: emails go to fans from ${from.name} <${from.email}>.`,
-          st.domainStatus === "missing" ? `${domain} isn't added in Resend yet. Until it is, only tests to your own Resend address work. In Resend: Domains → Add domain → ${domain}, add the DNS records it shows in GoDaddy, then Verify.`
-            : `${domain} is added in Resend but not verified yet (status: ${st.domainStatus}). Check the DNS records in GoDaddy, then press Verify in Resend.`),
+          st.senderProblem ? st.senderProblem
+            : st.domainStatus === "missing" ? `To send to fans from ${from.email}, add ${domain} in Resend: Domains → Add domain → ${domain}, add the DNS records it shows wherever ${domain} is managed, then press Verify. Until then only tests to your own Resend address work.`
+            : `${domain} is added in Resend but not verified yet (status: ${st.domainStatus}). Check the DNS records where ${domain} is managed, then press Verify in Resend.`),
         tick(st.hook, "Addresses that bounce or report spam are removed automatically.", "Couldn't set up automatic bounce removal. Reload this page to try again.")),
       h("p", { class: "a-note", style: { margin: 0 } }, `Free plan: 100 emails a day. With ${mail.onList} on the list, a send ${mail.onList > 100 ? `takes ${Math.ceil(mail.onList / 100)} days: it pauses at the limit and Continue sending picks it up the next day.` : "goes out in one go."}`),
       sesPlan);
@@ -675,7 +679,7 @@ function SendingCard(mail) {
   const hook = h("input", { value: st.hookUrl, readOnly: true, style: { flex: "1 1 260px", font: "inherit", padding: "9px 12px", border: "1px solid var(--line-2)", borderRadius: "10px" }, onFocus: (e) => e.target.select() });
   return Card("Email sending: Amazon SES", null,
     h("ul", { style: { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "6px" } },
-      tick(true, `Connected to Amazon SES (${st.region}). Emails go from ${from.name} <${from.email}>.`, ""),
+      tick(!st.senderProblem, `Connected to Amazon SES (${st.region}). Emails go from ${from.name} <${from.email}>.`, st.senderProblem || ""),
       st.production !== null && tick(st.production, "Production access is on: you can send to anyone.", "Still in Amazon's test mode (sandbox): only verified addresses receive emails. Request production access in SES."),
       st.perDay !== null && tick(true, `Amazon allows ${Math.round(st.perDay).toLocaleString()} emails a day (${Math.round(st.sentToday || 0).toLocaleString()} sent in the last 24 hours).`, "")),
     h("details", { style: { border: "1px solid var(--line)", borderRadius: "12px", padding: "12px 16px" } },

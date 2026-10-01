@@ -121,18 +121,20 @@ export function EmailDesigner(id, ctx) {
   });
 
   const onTest = guard(async () => {
-    const to = h("input", { type: "email", value: who });
+    let last = ""; try { last = localStorage.getItem("fo-test-to") || ""; } catch {}
+    const to = h("input", { type: "email", value: last || who });
     const go = h("button", { type: "button", class: "a-btn a-btn--primary", onClick: async () => {
       go.disabled = true; go.textContent = "Sending…";
-      try { const r = await api({ action: "test", ...current(), to: to.value }); show(r.message); m.close(); }
+      try { const r = await api({ action: "test", ...current(), to: to.value }); try { localStorage.setItem("fo-test-to", to.value.trim()); } catch {} show(r.message); m.close(); }
       catch (x) { show(x.message, "err"); go.disabled = false; go.textContent = "Send the test"; }
     } }, "Send the test");
-    const m = modal("Send a test", h("label", { class: "a-field" }, h("span", null, "Send it to"), to, h("small", null, `It arrives marked [Test], with "Aoife" as the first name. Nothing goes to the list.`)), h("div", { class: "a-actions" }, go));
+    const m = modal("Send a test", h("label", { class: "a-field" }, h("span", null, "Send it to"), to, h("small", null, `It arrives marked [Test], with "Aoife" as the first name. Nothing goes to the list. Until a sending domain is verified in Resend, tests only reach the address you signed up to Resend with.`)), h("div", { class: "a-actions" }, go));
   });
 
   const onSend = guard(async () => {
     const n = info.onList;
     if (!info.status.provider) return show("Connect an email service first (the steps are on the Mailing list page).", "err");
+    if (info.status.senderProblem) return show(info.status.senderProblem, "err");
     if (!n) return show("Nobody is on the list yet.", "err");
     if (!subject.value.trim()) { subject.focus(); return show("Add a subject line first.", "err"); }
     if (!confirm(`Send "${subject.value.trim()}" to ${n} ${n === 1 ? "fan" : "fans"}?\n\nEach fan gets their own copy with their first name. This can't be undone.`)) return;

@@ -7,7 +7,20 @@ import type { Env } from "./env";
 import settings from "../../content/settings.json";
 
 const S = settings as Record<string, string>;
-export const sender = () => ({ email: String(S.list_sender || S.email || "").trim(), name: String(S.list_sender_name || "Fizzy Orange").trim() });
+// The address emails come from has to be on a domain the band controls and has verified with the
+// email service. Mailbox providers (Gmail, Outlook and so on) don't let anyone else send as them.
+const MAILBOX = /@(gmail|googlemail|outlook|hotmail|live|msn|yahoo|ymail|icloud|me|mac|aol|proton|protonmail|pm|gmx|eircom)\.[a-z.]+$/i;
+export const sender = () => ({
+  email: String(S.list_sender || "").trim(), name: String(S.list_sender_name || "Fizzy Orange").trim(),
+  replyTo: String(S.list_reply_to || S.list_sender || S.email || "").trim(),
+});
+/** Why the list can't be emailed yet, in plain words; null when the sending address is usable. */
+export function senderProblem(): string | null {
+  const { email } = sender();
+  if (!email) return "No sending address is set yet. Once the band's address is ready, set it under Website text (\"Mailing list emails come from\").";
+  if (MAILBOX.test(email)) return `${email} can't be used to send from: ${email.split("@")[1]} doesn't let email services send as its addresses. Use an address on a domain the band owns (for example hello@fizzyorange.ie); replies can still go to a Gmail address.`;
+  return null;
+}
 export type Provider = "ses" | "resend" | null;
 export const provider = (env: Env): Provider =>
   env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY ? "ses" : env.RESEND_API_KEY ? "resend" : null;
@@ -27,7 +40,8 @@ export async function resend(env: Env, path: string, init: RequestInit = {}): Pr
   return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) };
 }
 async function sendResend(env: Env, msgs: Msg[], from?: string): Promise<Sent[]> {
-  const body = msgs.map((m) => ({ from: fromLine(from), to: [m.to], reply_to: sender().email, subject: m.subject, html: m.html, text: m.text, headers: unsubHeaders(m) }));
+  const replyTo = sender().replyTo;
+  const body = msgs.map((m) => ({ from: fromLine(from), to: [m.to], ...(replyTo ? { reply_to: replyTo } : {}), subject: m.subject, html: m.html, text: m.text, headers: unsubHeaders(m) }));
   const r = await resend(env, "/emails/batch", { method: "POST", body: JSON.stringify(body) });
   if (r.ok) return msgs.map(() => ({ ok: true }));
   const name = String(r.data?.name ?? ""), text = String(r.data?.message ?? `Resend refused the email (${r.status}).`);
@@ -78,7 +92,7 @@ async function sendSesOne(env: Env, m: Msg): Promise<Sent> {
   const host = `email.${region}.amazonaws.com`, path = "/v2/email/outbound-emails";
   const s = sender();
   const body = JSON.stringify({
-    FromEmailAddress: fromLine(), Destination: { ToAddresses: [m.to] }, ReplyToAddresses: [s.email],
+    FromEmailAddress: fromLine(), Destination: { ToAddresses: [m.to] }, ...(s.replyTo ? { ReplyToAddresses: [s.replyTo] } : {}),
     Content: { Simple: {
       Subject: { Data: m.subject, Charset: "UTF-8" },
       Body: { Html: { Data: m.html, Charset: "UTF-8" }, Text: { Data: m.text, Charset: "UTF-8" } },
