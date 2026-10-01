@@ -2,6 +2,7 @@
 // (the site has no build tooling). Content lives in content/*.json in the GitHub repo;
 // every save is a commit made by functions/api/cms/content.ts, and Cloudflare rebuilds
 // the site about a minute later. Login is Cloudflare Access (email + one-time code).
+import { EmailDesigner } from "./designer.js";
 
 /* ================= tiny DOM helper ================= */
 function h(tag, props, ...kids) {
@@ -209,6 +210,13 @@ function route() {
   else if (section === "gallery") view = GalleryPanel();
   else if (section === "text") view = SettingsPanel();
   else if (section === "list") view = SubscribersPanel();
+  else if (section === "email") {
+    // the email designer takes the whole screen, without the sidebar
+    const s = files.settings.data;
+    const links = [["Instagram", s.instagram], ["Spotify", s.spotify], ["Apple Music", s.apple_music], ["Bandcamp", s.bandcamp], ["YouTube", s.youtube], ["TikTok", s.tiktok]].filter(([, u]) => u);
+    document.getElementById("app").replaceChildren(EmailDesigner(id || "new", { h, icon, I, call, show, who: editor, links, setDirty: (v) => { dirty = v; } }));
+    return;
+  }
   else view = Overview();
   document.getElementById("app").replaceChildren(shell(section, view));
 }
@@ -483,7 +491,7 @@ const TEXT = [
   ["Top of the page", null, [["kicker", "Small line above the logo", "Shown on phones held sideways and for visitors who turn animations off."], ["tagline", "Tagline", "Under the logo at the end of the scroll animation."], ["gigs_hero_line", "Gig box when there are no dates", "When a gig is added, this is replaced by the next date automatically."]]],
   ["Latest release", "Your newest album or single. It fills the Spotify box in the scroll animation and the whole Listen section, including the player.", [["release_title", "Title"], ["release_line", "One line about it", "Used in the scroll animation."], ["release_url", "Spotify link", "The album or single's Spotify page. The player on the site plays this."], ["release_apple", "Apple Music link", "Leave blank to use your Apple Music artist page."], ["release_bandcamp", "Bandcamp link", "Leave blank to use your Bandcamp page."], ["release_tracks", "Tracklist", "One song per line, with the length after a bar, e.g.  Old Dog | 3:24", true]]],
   ["Section intros", null, [["gigs_intro", "Gigs"], ["gigs_empty", "Gigs, when there are no dates"], ["listen_intro", "Listen", null, true], ["band_intro", "The band", null, true], ["band_members", "Band members", "Separate names with commas."], ["list_intro", "Mailing list"], ["book_intro", "Bookings"], ["gallery_intro", "Gallery"]]],
-  ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
+  ["Contact and social links", "Anything you leave blank is simply left off the site.", [["email", "Contact email", "Used for the booking button and the footer."], ["list_sender", "Mailing list emails come from", "Its domain has to be verified with the email service (see the Mailing list page)."], ["list_sender_name", "Sender name on those emails", "What fans see in their inbox, e.g. Fizzy Orange."], ["instagram", "Instagram"], ["spotify", "Spotify artist page"], ["apple_music", "Apple Music"], ["bandcamp", "Bandcamp"], ["youtube", "YouTube"], ["tiktok", "TikTok"]]],
 ];
 const LINKS = ["release_url", "release_apple", "release_bandcamp", "instagram", "spotify", "apple_music", "bandcamp", "youtube", "tiktok"];
 
@@ -493,12 +501,13 @@ function SettingsPanel() {
   const input = (k, long) => {
     const on = (e) => { f[k] = e.target.value; bar.dirty(true); };
     if (long) return h("textarea", { style: { minHeight: "120px" }, value: f[k] ?? "", onInput: on });
-    return h("input", { value: f[k] ?? "", type: k === "email" ? "email" : LINKS.includes(k) ? "url" : "text", placeholder: LINKS.includes(k) ? "https://" : null, onInput: on });
+    return h("input", { value: f[k] ?? "", type: k === "email" || k === "list_sender" ? "email" : LINKS.includes(k) ? "url" : "text", placeholder: LINKS.includes(k) ? "https://" : null, onInput: on });
   };
   async function onSave() {
     const bad = LINKS.map((k) => f[k]).find((u) => u && !/^https:\/\//.test(u.trim()));
     if (bad) return show(`Links need to start with https:// (check "${bad}").`, "err");
     if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return show("The contact email doesn't look right.", "err");
+    if (f.list_sender && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.list_sender.trim())) return show("The mailing list sender address doesn't look right.", "err");
     bar.busy(true);
     try { await save("settings", Object.fromEntries(Object.entries(f).map(([k, v]) => [k, String(v).trim()])), "update the website text"); bar.dirty(false); show(LIVE); }
     catch (x) { show(x.message, "err"); } finally { bar.busy(false); }
@@ -601,10 +610,108 @@ function RemoveCard(reload) {
     Field("Addresses", box), h("div", { class: "a-actions" }, btn));
 }
 
+const mailApi = (body) => call("/api/cms/mail", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+
+/** Saved email designs, and the way into the designer. */
+function EmailsCard(mail, reload) {
+  const rows = mail.designs;
+  const act = (label, fn, danger) => h("button", { type: "button", class: `a-btn a-btn--sm ${danger ? "a-btn--danger" : ""}`, onClick: async (e) => { e.preventDefault(); try { if ((await fn()) !== false) await reload(); } catch (x) { show(x.message, "err"); } } }, label);
+  return Card("Emails", "Design an email with pictures, buttons and your colours, then send every fan their own copy with their first name.",
+    h("div", { class: "a-actions" }, h("a", { class: "a-btn a-btn--primary", href: "#/email/new" }, icon(I.plus), "Design a new email")),
+    rows.length ? h("div", { class: "a-rows" }, rows.map((d) => h("div", { class: "a-row", style: { cursor: "default" } },
+      h("span", { class: "a-row__img a-row__img--ph", "aria-hidden": "true" }, "✉"),
+      h("span", null, h("span", { class: "a-row__t" }, d.name), h("span", { class: "a-row__s" }, `${d.subject || "No subject yet"} · saved ${d.updated_at.slice(0, 16)}`)),
+      h("span", { class: "a-row__end a-actions" },
+        h("a", { class: "a-btn a-btn--sm", href: `#/email/${d.id}` }, "Open"),
+        act("Copy", () => mailApi({ action: "duplicate", id: d.id })),
+        act("Delete", async () => { if (!confirm(`Delete "${d.name}"?\n\nThis cannot be undone.`)) return false; await mailApi({ action: "delete", id: d.id }); }, true)))))
+      : h("p", { style: { margin: 0, color: "var(--muted)" } }, "No emails yet. Your first one starts from a Fizzy Orange layout you can change."));
+}
+
+/** Which email service is connected, what's left to set up, and the plan for a bigger list. */
+function SendingCard(mail) {
+  const st = mail.status, from = mail.sender, domain = (from.email.split("@")[1] || "your domain");
+  const tick = (ok, yes, no) => h("li", { style: { display: "flex", gap: "10px", alignItems: "baseline" } },
+    h("span", { "aria-hidden": "true", style: { color: ok ? "#2f7a3a" : "var(--danger)", fontWeight: 700 } }, ok ? "✓" : "✗"), h("span", null, ok ? yes : no));
+  const steps = (...items) => h("ol", { style: { margin: "10px 0 0", paddingLeft: "20px", lineHeight: 1.55, display: "grid", gap: "6px" } }, items.map((x) => h("li", null, x)));
+  const b = (t) => h("strong", null, t);
+  const cf = "In Cloudflare: Workers & Pages → fizzy-orange → Settings → Variables and Secrets → Add.";
+  const sesPlan = h("details", { style: { border: "1px solid var(--line)", borderRadius: "12px", padding: "12px 16px" } },
+    h("summary", { style: { cursor: "pointer", fontWeight: 600 } }, "When the list passes 100 fans: move to Amazon SES ($0.10 per 1,000 emails, no monthly fee)"),
+    h("p", { style: { margin: "10px 0 0" } }, "Resend's free plan sends 100 emails a day, so a list of 300 takes three days per email. Amazon SES sends them all at once for a few cents. The designer, the list and everything here stay the same: only the delivery changes."),
+    steps(
+      ["Create an account at ", h("a", { href: "https://aws.amazon.com/ses/", target: "_blank", rel: "noopener" }, "aws.amazon.com"), " (it asks for a card; you're only charged for what you send)."],
+      ["Open ", b("Amazon SES"), ", choose the region ", b("Europe (Ireland)"), ", and verify the domain ", b(domain), ". It gives DNS records to add in GoDaddy, like Resend's."],
+      ["Still in SES, ", b("request production access"), " (a short form about what you send; Amazon usually answers within a day). Until then SES only delivers to addresses you've verified."],
+      ["In ", b("IAM"), ", create a user with the ", b("AmazonSESFullAccess"), " permission and create an ", b("access key"), " for it."],
+      [cf, " Add two Secrets, ", b("AWS_ACCESS_KEY_ID"), " and ", b("AWS_SECRET_ACCESS_KEY"), ", and a plain Text value ", b("AWS_REGION"), " = eu-west-1. Then Deployments → latest → Retry deployment."],
+      ["Reload this page. It will show Amazon SES as connected, with one last address to paste into Amazon so bounced emails are removed automatically."]));
+
+  if (!st.provider) {
+    return Card("Email sending: connect Resend to start", "Free for 3,000 emails a month (100 a day), with no branding on your emails. You can design emails now; sending needs this.",
+      steps(
+        ["Create a free account at ", h("a", { href: "https://resend.com", target: "_blank", rel: "noopener" }, "resend.com"), ". Use an email address you can check: test emails go there."],
+        ["In Resend, open ", b("API Keys"), " → ", b("Create API key"), " with ", b("Full access"), ". Copy it."],
+        [cf, " Type: ", b("Secret"), ". Name: ", b("RESEND_API_KEY"), ". Paste the key and save."],
+        ["Deployments → the latest one → ⋯ → Retry deployment. Reload this page. You can now send tests to your own address."],
+        ["To send to fans from ", b(from.email), ": in Resend open ", b("Domains → Add domain"), ", enter ", b(domain), ", add the DNS records it shows in GoDaddy, then press ", b("Verify"), "."]),
+      sesPlan);
+  }
+  if (!st.ok) return Card("Email sending", null, h("p", { class: "a-note a-note--warn", style: { margin: 0 } }, st.message || "The email service didn't answer. Reload the page to try again."));
+
+  if (st.provider === "resend") {
+    const verified = st.domainStatus === "verified";
+    return Card("Email sending: Resend", null,
+      h("ul", { style: { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "6px" } },
+        tick(true, "Connected to Resend. You can send test emails.", ""),
+        tick(verified, `${domain} is verified: emails go to fans from ${from.name} <${from.email}>.`,
+          st.domainStatus === "missing" ? `${domain} isn't added in Resend yet. Until it is, only tests to your own Resend address work. In Resend: Domains → Add domain → ${domain}, add the DNS records it shows in GoDaddy, then Verify.`
+            : `${domain} is added in Resend but not verified yet (status: ${st.domainStatus}). Check the DNS records in GoDaddy, then press Verify in Resend.`),
+        tick(st.hook, "Addresses that bounce or report spam are removed automatically.", "Couldn't set up automatic bounce removal. Reload this page to try again.")),
+      h("p", { class: "a-note", style: { margin: 0 } }, `Free plan: 100 emails a day. With ${mail.onList} on the list, a send ${mail.onList > 100 ? `takes ${Math.ceil(mail.onList / 100)} days: it pauses at the limit and Continue sending picks it up the next day.` : "goes out in one go."}`),
+      sesPlan);
+  }
+  // Amazon SES
+  const hook = h("input", { value: st.hookUrl, readOnly: true, style: { flex: "1 1 260px", font: "inherit", padding: "9px 12px", border: "1px solid var(--line-2)", borderRadius: "10px" }, onFocus: (e) => e.target.select() });
+  return Card("Email sending: Amazon SES", null,
+    h("ul", { style: { listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "6px" } },
+      tick(true, `Connected to Amazon SES (${st.region}). Emails go from ${from.name} <${from.email}>.`, ""),
+      st.production !== null && tick(st.production, "Production access is on: you can send to anyone.", "Still in Amazon's test mode (sandbox): only verified addresses receive emails. Request production access in SES."),
+      st.perDay !== null && tick(true, `Amazon allows ${Math.round(st.perDay).toLocaleString()} emails a day (${Math.round(st.sentToday || 0).toLocaleString()} sent in the last 24 hours).`, "")),
+    h("details", { style: { border: "1px solid var(--line)", borderRadius: "12px", padding: "12px 16px" } },
+      h("summary", { style: { cursor: "pointer", fontWeight: 600 } }, "One-time step: remove bounced addresses automatically"),
+      steps(
+        ["In ", b("Amazon SNS"), ", create a ", b("Standard topic"), " (any name)."],
+        ["In that topic, ", b("Create subscription"), ": protocol ", b("HTTPS"), ", endpoint the address below. It confirms itself."],
+        ["In ", b("Amazon SES → Identities → " + domain + " → Notifications"), ", set ", b("Bounce"), " and ", b("Complaint"), " feedback to that topic."]),
+      h("div", { class: "a-actions", style: { marginTop: "10px", alignItems: "center" } }, hook, h("button", { type: "button", class: "a-btn a-btn--sm", onClick: () => copyText(st.hookUrl, "Address copied.") }, "Copy"))));
+}
+
+/** Emails already sent, and any still part-way through a daily limit. */
+function PastCard(mail, reload) {
+  const rows = mail.mailings;
+  if (!rows.length) return null;
+  return Card("Sent emails", null, h("div", { class: "a-rows" }, rows.map((m) => {
+    const cont = m.remaining > 0 && h("button", { type: "button", class: "a-btn a-btn--sm a-btn--primary", onClick: async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      let sent = 0, stop = null;
+      try {
+        for (;;) { btn.textContent = `Sending… ${sent} more`; const r = await mailApi({ action: "send", id: m.id }); sent += r.sent; if (r.stop) { stop = r.stop; break; } if (!r.remaining || (!r.sent && !r.failed)) break; }
+        show(stop ? `Sent ${sent} more, then stopped: ${stop}` : `Done: sent to ${sent} more.`, stop ? "err" : null);
+      } catch (x) { show(x.message, "err"); }
+      await reload();
+    } }, m.sent + m.failed ? `Continue sending (${m.remaining} left)` : `Send now (${m.remaining} waiting)`);
+    return h("div", { class: "a-row", style: { cursor: "default" } },
+      h("span", { class: "a-row__img a-row__img--ph", "aria-hidden": "true" }, "✉"),
+      h("span", null, h("span", { class: "a-row__t" }, m.subject), h("span", { class: "a-row__s" }, `${m.created_at.slice(0, 16)} · sent to ${m.sent}${m.failed ? ` · ${m.failed} undeliverable` : ""}`)),
+      h("span", { class: "a-row__end" }, cont || h("span", { class: "a-tag a-tag--now" }, m.sent + m.failed ? "Sent" : "Not sent")));
+  })));
+}
+
 function SubscribersPanel() {
   const root = h("div", null, h("div", { class: "a-empty" }, h("div", { class: "a-spin" }), h("p", null, "Loading…")));
-  const load = () => listSubscribers().then((r) => draw(r)).catch((e) => root.replaceChildren(h("p", { class: "a-err", role: "alert" }, e.message)));
-  function draw({ subscribers: subs, checks }) {
+  const load = () => Promise.all([listSubscribers(), call("/api/cms/mail")]).then(([r, mail]) => draw(r, mail)).catch((e) => root.replaceChildren(h("p", { class: "a-err", role: "alert" }, e.message)));
+  function draw({ subscribers: subs, checks }, mail) {
     const link = `${location.origin}/join/`;
     const dl = h("button", { class: "a-btn", disabled: !subs.length, onClick: () => {
       saveCsv("fizzy-orange-mailing-list.csv", "first_name,email,inbox_check,joined\r\n" + subs.map((s) => [s.name, s.email, (CHECK_LABEL[s.verified || "unchecked"] || CHECK_LABEL.unchecked)[0], s.created_at].map(csvCell).join(",")).join("\r\n") + "\r\n");
@@ -618,7 +725,9 @@ function SubscribersPanel() {
             h("input", { value: link, readOnly: true, style: { flex: "1 1 260px", font: "inherit", padding: "10px 12px", border: "1px solid var(--line-2)", borderRadius: "10px" }, onFocus: (e) => e.target.select() }),
             h("button", { type: "button", class: "a-btn a-btn--primary", onClick: () => copyText(link, "Link copied.") }, "Copy link"),
             h("a", { class: "a-btn", href: link, target: "_blank", rel: "noopener" }, "Open"))),
-        MergeCard(subs), ChecksCard(checks), RemoveCard(load),
+        EmailsCard(mail, load), PastCard(mail, load), SendingCard(mail), ChecksCard(checks),
+        h("details", { class: "a-fold" }, h("summary", null, "Send from your own Outlook or Gmail instead (mail merge, plain layout)"), MergeCard(subs)),
+        RemoveCard(load),
         !subs.length ? Empty("No sign-ups yet", "Share your sign-up link and fans will appear here.")
           : h("div", { class: "a-card", style: { overflowX: "auto" } }, h("table", { class: "a-table" },
             h("thead", null, h("tr", null, h("th", null, "Name"), h("th", null, "Email"), h("th", null, "Inbox check"), h("th", null, "Joined"), h("th"))),
