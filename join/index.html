@@ -83,6 +83,16 @@ input::placeholder{color:#7d726b}
 .sent form,.sent .form-note{display:none}
 [hidden]{display:none!important}
 
+/* computers and tablets held sideways: a wider card, the two boxes side by side, and everything a
+   little larger, since there is width to spare */
+@media (min-width:900px) and (min-height:541px){
+  :root{--u:min(1.1vh,1.4vw,13px)}
+  @supports (height:100dvh){:root{--u:min(1.1dvh,1.4vw,13px)}}
+  main{width:calc(var(--u)*64)}
+  h1{font-size:calc(var(--u)*5.4);padding-right:calc(var(--u)*10)}
+  form{grid-template-columns:1fr 1.5fr}
+  form .btn{grid-column:1 / -1}
+}
 /* short and wide (a phone on its side, a squat window): the logo sits beside the card, and inside
    the card the words sit beside the form, with the three perks in a row underneath */
 @media (orientation:landscape) and (max-height:540px){
@@ -121,7 +131,7 @@ input::placeholder{color:#7d726b}
       <ul class="perks">
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>First to hear about gigs.</li>
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>New songs before release day.</li>
-        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>No spam. We're too busy rehearsing.</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20C6 9 13 4 21 4c0 8-5 15-16 17z" fill="#5F9A4B" stroke="#1F1A18" stroke-width="2"/></svg>No spam. We can't be arsed.</li>
       </ul>
     </div>
     <div class="act" data-signup-box data-email="<!--t:email-->luke@sleepover.club<!--/t-->">
