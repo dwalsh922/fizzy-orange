@@ -20,7 +20,7 @@
       note.replaceChildren(p);
       if (suggest) {
         const row = document.createElement('div'); row.className = 'note-btns';
-        const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn'; yes.textContent = 'Yes, use ' + suggest;
+        const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn'; yes.textContent = 'Yes, fix it';
         yes.addEventListener('click', () => { form.email.value = suggest; confirmed = false; hideNote(); form.requestSubmit(); });
         row.appendChild(yes);
         if (isQuestion) {
