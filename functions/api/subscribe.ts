@@ -10,7 +10,25 @@ import { bouncerOn, checkInbox, type Inbox } from "../_lib/bouncer";
 // Fans already on the list, and addresses checked in the last 30 days, don't use a paid check.
 const PER_VISITOR_PER_HOUR = 8;
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+// The band's own site (fizzyorangeband.com) hosts a copy of the /join page whose form posts here,
+// so those addresses are allowed to read the answer.
+const SITES = new Set(["https://fizzyorangeband.com", "https://www.fizzyorangeband.com"]);
+function allow(request: Request, res: Response): Response {
+  const origin = request.headers.get("origin");
+  if (!origin || !SITES.has(origin)) return res;
+  const out = new Response(res.body, res);
+  out.headers.set("access-control-allow-origin", origin);
+  out.headers.append("vary", "Origin");
+  return out;
+}
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) => {
+  const origin = request.headers.get("origin") ?? "";
+  if (!SITES.has(origin)) return new Response(null, { status: 403 });
+  return new Response(null, { status: 204, headers: { "access-control-allow-origin": origin, "access-control-allow-methods": "POST", "access-control-allow-headers": "content-type", "access-control-max-age": "86400", vary: "Origin" } });
+};
+export const onRequestPost: PagesFunction<Env> = async (ctx) => allow(ctx.request, await subscribe(ctx));
+
+const subscribe: PagesFunction<Env> = async ({ request, env }) => {
   const form = await request.formData().catch(() => null);
   if (!form) return json({ ok: false, message: "Something went wrong. Try again." }, 400);
   if (String(form.get("company") ?? "")) return json({ ok: true, state: "joined", message: "You're on the list. See you down the front." }); // bot trap

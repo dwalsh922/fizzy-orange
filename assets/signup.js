@@ -1,5 +1,6 @@
 // Mailing list sign-up, shared by the homepage and /join. Each [data-signup-box] holds a form
 // (name, email, a hidden bot trap), a .form-note for problems and typo suggestions, and a .success panel.
+// A copy of the form hosted on another site sets data-api to this site's address, so sign-ups still land here.
 // The checks (including the instant inbox check) happen in functions/api/subscribe.ts.
 (() => {
   const OK_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,7 +48,7 @@
       btn.disabled = true; btn.textContent = 'Checking...';
       const fd = new FormData(form); if (confirmed) fd.set('confirmed', '1');
       let r = null, j = {};
-      try { r = await fetch('/api/subscribe', { method: 'POST', body: fd }); j = await r.json().catch(() => ({})); } catch (_) {}
+      try { r = await fetch((box.dataset.api || '') + '/api/subscribe', { method: 'POST', body: fd }); j = await r.json().catch(() => ({})); } catch (_) {}
       btn.disabled = false; btn.textContent = label;
       if (r && r.ok) done(j.message || "You're on the list. See you down the front.");
       else if (r && (r.status === 400 || r.status === 429)) {

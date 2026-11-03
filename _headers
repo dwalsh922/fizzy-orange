@@ -14,6 +14,9 @@
 /unsubscribe/*
   X-Robots-Tag: noindex
 
+/standalone/*
+  X-Robots-Tag: noindex
+
 /admin/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
