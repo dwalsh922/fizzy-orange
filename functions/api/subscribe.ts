@@ -2,11 +2,13 @@ import { json, type Env } from "../_lib/env";
 import { checkEmail } from "../_lib/email";
 import { cleanName, ensureList, hashIp, newToken, ON_LIST } from "../_lib/list";
 import { bouncerOn, checkInbox, type Inbox } from "../_lib/bouncer";
+import { welcomeNewFan } from "../_lib/welcome";
 
 // Public mailing-list sign-up: first name + email.
 //   1. Free checks: the shape, typos in common providers, throwaway inboxes, a domain that can't get email.
 //   2. The instant inbox check (Bouncer, when BOUNCER_API_KEY is set): an inbox that doesn't exist is turned
 //      away on the spot, so the fan can fix a typo. Anything Bouncer can't answer is let through.
+//   3. A new fan is sent the welcome email (functions/_lib/welcome.ts) once they've had their answer.
 // Fans already on the list, and addresses checked in the last 30 days, don't use a paid check.
 const PER_VISITOR_PER_HOUR = 8;
 
@@ -28,7 +30,8 @@ export const onRequestOptions: PagesFunction<Env> = async ({ request }) => {
 };
 export const onRequestPost: PagesFunction<Env> = async (ctx) => allow(ctx.request, await subscribe(ctx));
 
-const subscribe: PagesFunction<Env> = async ({ request, env }) => {
+const subscribe: PagesFunction<Env> = async (ctx) => {
+  const { request, env } = ctx;
   const form = await request.formData().catch(() => null);
   if (!form) return json({ ok: false, message: "Something went wrong. Try again." }, 400);
   if (String(form.get("company") ?? "")) return json({ ok: true, state: "joined", message: "You're on the list. See you down the front." }); // bot trap
@@ -71,8 +74,11 @@ const subscribe: PagesFunction<Env> = async ({ request, env }) => {
     }, 400);
   }
 
-  await db.prepare(`INSERT INTO subscribers (email, name, status, token, confirmed_at, verified) VALUES (?, ?, 'confirmed', ?, datetime('now'), ?)
-      ON CONFLICT (email) DO UPDATE SET name = excluded.name, status = 'confirmed', confirmed_at = datetime('now'), verified = excluded.verified, token = COALESCE(subscribers.token, excluded.token)`)
-    .bind(email, name, newToken(), inbox.result).run();
+  const fan = await db.prepare(`INSERT INTO subscribers (email, name, status, token, confirmed_at, verified) VALUES (?, ?, 'confirmed', ?, datetime('now'), ?)
+      ON CONFLICT (email) DO UPDATE SET name = excluded.name, status = 'confirmed', confirmed_at = datetime('now'), verified = excluded.verified, token = COALESCE(subscribers.token, excluded.token)
+      RETURNING token`)
+    .bind(email, name, newToken(), inbox.result).first<{ token: string }>();
+  // the welcome email goes out after the fan has their answer, so they never wait for it
+  if (fan?.token) ctx.waitUntil(welcomeNewFan(env, new URL(request.url).origin, { email, name, token: fan.token }).catch(() => {}));
   return json({ ok: true, state: "joined", message: `You're on the list, ${name}. See you down the front.` });
 };

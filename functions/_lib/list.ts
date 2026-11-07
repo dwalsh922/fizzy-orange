@@ -7,7 +7,9 @@
 //   mail_designs: emails built in the admin's designer (the editor's project and the finished HTML).
 //   mail_images:  pictures used in those emails, served from /mi/<id>.<type> the moment they're uploaded.
 //   mailings:     a design as it was when it was sent.  sends: who each mailing has reached, so a send
-//                 can stop at a daily limit and carry on later.
+//                 can stop at a daily limit and carry on later. The welcome email's sends are logged
+//                 there too, under the name "welcome".
+//   mail_config:  small settings (the welcome email's wording, the bounce webhook's address).
 
 export const LIST_TABLE = "CREATE TABLE IF NOT EXISTS subscribers (email TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT (datetime('now')))";
 const COLUMNS = ["name TEXT", "status TEXT", "token TEXT", "confirmed_at TEXT", "confirm_sent_at TEXT", "reminded_at TEXT", "ip TEXT", "verified TEXT"];
@@ -23,6 +25,7 @@ export async function ensureList(db: D1Database): Promise<void> {
     db.prepare("CREATE TABLE IF NOT EXISTS mail_images (id TEXT PRIMARY KEY, type TEXT NOT NULL, data BLOB NOT NULL, w INTEGER, h INTEGER, created_at TEXT NOT NULL DEFAULT (datetime('now')))"),
     db.prepare("CREATE TABLE IF NOT EXISTS mailings (id TEXT PRIMARY KEY, design_id TEXT, name TEXT, subject TEXT NOT NULL, preheader TEXT, html TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), created_by TEXT)"),
     db.prepare("CREATE TABLE IF NOT EXISTS sends (campaign_id TEXT NOT NULL, email TEXT NOT NULL, sent_at TEXT NOT NULL DEFAULT (datetime('now')), error TEXT, PRIMARY KEY (campaign_id, email))"),
+    db.prepare("CREATE TABLE IF NOT EXISTS mail_config (key TEXT PRIMARY KEY, value TEXT)"),
   ]);
   const { results } = await db.prepare("PRAGMA table_info(subscribers)").all<{ name: string }>();
   const have = new Set(results.map((r) => r.name));

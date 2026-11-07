@@ -614,6 +614,62 @@ function RemoveCard(reload) {
 
 const mailApi = (body) => call("/api/cms/mail", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
+/** The automatic welcome email: its wording, a test, and fans who haven't had it yet. */
+function WelcomeCard(mail, reload) {
+  const w = mail.welcome, from = mail.sender;
+  let on = w.on;
+  const mark = () => { dirty = true; saveBtn.disabled = false; };
+  const subject = h("input", { value: w.subject, maxLength: 150, onInput: mark });
+  const body = h("textarea", { value: w.body, style: { minHeight: "320px", lineHeight: 1.55 }, onInput: mark });
+  const saveBtn = h("button", { type: "button", class: "a-btn a-btn--primary", disabled: true, onClick: async () => {
+    saveBtn.disabled = true; saveBtn.textContent = "Saving…";
+    try { await mailApi({ action: "welcome-save", on, subject: subject.value, body: body.value }); dirty = false; show(on ? "Saved. New sign-ups get this version from now on." : "Saved. The welcome email is paused."); }
+    catch (x) { saveBtn.disabled = false; show(x.message, "err"); }
+    finally { saveBtn.textContent = "Save"; }
+  } }, "Save");
+  const reset = h("button", { type: "button", class: "a-btn a-btn--sm", onClick: () => {
+    if (!confirm("Put back the original wording? Your changes are lost once you press Save.")) return;
+    subject.value = w.defaults.subject; body.value = w.defaults.body; mark();
+  } }, "Original wording");
+
+  let lastTo = ""; try { lastTo = localStorage.getItem("fo-test-to") || ""; } catch { /* private window */ }
+  const to = h("input", { type: "email", value: lastTo, placeholder: "Test address (yours)", style: { flex: "1 1 220px", font: "inherit", padding: "9px 12px", border: "1px solid var(--line-2)", borderRadius: "10px" } });
+  const testBtn = h("button", { type: "button", class: "a-btn", onClick: async () => {
+    testBtn.disabled = true; testBtn.textContent = "Sending…";
+    try {
+      try { localStorage.setItem("fo-test-to", to.value.trim()); } catch { /* private window */ }
+      const r = await mailApi({ action: "welcome-test", to: to.value.trim(), subject: subject.value, body: body.value });
+      show(r.message);
+    } catch (x) { show(x.message, "err"); }
+    finally { testBtn.disabled = false; testBtn.textContent = "Send me a test"; }
+  } }, "Send me a test");
+
+  const when = (iso) => new Date(iso).toLocaleString("en-IE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Dublin" });
+  const catchup = h("button", { type: "button", class: "a-btn a-btn--sm a-btn--primary", onClick: async (e) => {
+    if (dirty) return show("Save your changes first, so everyone gets the same version.", "err");
+    if (!confirm(`Send the welcome email to the ${w.waiting} ${w.waiting === 1 ? "fan" : "fans"} on the list who haven't had it?`)) return;
+    const btn = e.currentTarget; btn.disabled = true;
+    let sent = 0, stop = null;
+    try {
+      for (;;) { btn.textContent = `Sending… ${sent}`; const r = await mailApi({ action: "welcome-catchup" }); sent += r.sent; if (r.stop) { stop = r.stop; break; } if (!r.remaining || (!r.sent && !r.failed)) break; }
+      show(stop ? `Sent ${sent}, then stopped: ${stop}` : `Done: sent to ${sent}.`, stop ? "err" : null);
+    } catch (x) { show(x.message, "err"); }
+    await reload();
+  } }, `Send it to them (${w.waiting})`);
+
+  return Card("Welcome email", "Goes out by itself to every new fan the moment they sign up. It reads like a personal email, with no pictures or buttons, and asks them to reply. A reply, or moving it to the Primary tab, is what tells Gmail to put your later emails in their Primary inbox.",
+    check("Send it to everyone who signs up", "Untick and save to pause it.", on, (v) => { on = v; mark(); }),
+    Field("Subject", subject, "{first_name} becomes each fan's first name."),
+    Field("Email", body, "Write it like a message to a mate. A blank line starts a new paragraph, and web addresses become links. A small unsubscribe line is added underneath."),
+    h("div", { class: "a-actions", style: { alignItems: "center" } }, saveBtn, reset),
+    h("p", { class: "a-note", style: { margin: 0 } }, `From ${from.name} <${from.email || "no address set yet"}>. Replies go to ${from.replyTo || from.email || "the same address"}. Both are set under Website text.`),
+    h("div", { class: "a-actions", style: { alignItems: "center" } }, to, testBtn),
+    h("p", { style: { margin: 0 } }, `Sent to ${w.sent} ${w.sent === 1 ? "fan" : "fans"} so far. Each one counts towards the email service's daily limit, the same as a mailing.`),
+    w.problem && h("p", { class: "a-note a-note--warn", style: { margin: 0 } }, `${when(w.problem.at)}: a welcome email couldn't go. ${w.problem.message} Anyone it missed is counted below and can be sent it from here.`),
+    w.waiting > 0 && h("div", { class: "a-actions", style: { alignItems: "center" } },
+      h("span", null, `${w.waiting} ${w.waiting === 1 ? "fan on the list hasn't" : "fans on the list haven't"} had it yet, from before it was switched on or while sending was held up.`), catchup));
+}
+
 /** Saved email designs, and the way into the designer. */
 function EmailsCard(mail, reload) {
   const rows = mail.designs;
@@ -729,7 +785,7 @@ function SubscribersPanel() {
             h("input", { value: link, readOnly: true, style: { flex: "1 1 260px", font: "inherit", padding: "10px 12px", border: "1px solid var(--line-2)", borderRadius: "10px" }, onFocus: (e) => e.target.select() }),
             h("button", { type: "button", class: "a-btn a-btn--primary", onClick: () => copyText(link, "Link copied.") }, "Copy link"),
             h("a", { class: "a-btn", href: link, target: "_blank", rel: "noopener" }, "Open"))),
-        EmailsCard(mail, load), PastCard(mail, load), SendingCard(mail), ChecksCard(checks),
+        WelcomeCard(mail, load), EmailsCard(mail, load), PastCard(mail, load), SendingCard(mail), ChecksCard(checks),
         h("details", { class: "a-fold" }, h("summary", null, "Send from your own Outlook or Gmail instead (mail merge, plain layout)"), MergeCard(subs)),
         RemoveCard(load),
         !subs.length ? Empty("No sign-ups yet", "Share your sign-up link and fans will appear here.")

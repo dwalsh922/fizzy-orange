@@ -90,7 +90,7 @@
 /* ---------- buttons ---------- */
 .a-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface);
+  padding: 10px 16px; border-radius: 15px; border: 1px solid var(--line-2); background: var(--surface);
   color: var(--ink); font: 500 15px/1.2 var(--f-body); cursor: pointer; white-space: nowrap;
   transition: background .15s, border-color .15s, color .15s;
 }
@@ -101,7 +101,7 @@
 .a-btn--quiet:hover { background: var(--surface-2); }
 .a-btn--danger { border-color: transparent; background: transparent; color: var(--danger); }
 .a-btn--danger:hover { background: var(--danger-soft); border-color: var(--danger); }
-.a-btn--sm { padding: 7px 11px; font-size: 14px; border-radius: 8px; }
+.a-btn--sm { padding: 7px 11px; font-size: 14px; border-radius: 15px; }
 .a-btn:disabled { opacity: .55; cursor: not-allowed; }
 .a-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 

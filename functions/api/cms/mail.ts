@@ -1,12 +1,14 @@
 import { json, type Data, type Env } from "../../_lib/env";
 import { ensureList, newToken, ON_LIST } from "../../_lib/list";
-import { awsAuth, hookKey, provider, resend, sender, senderProblem, sendMany, type Msg } from "../../_lib/mailer";
+import { awsAuth, hookKey, provider, resend, sender, senderProblem, sendMany, type Msg, type Provider } from "../../_lib/mailer";
 import { fillSubject, hasUnsubscribe, personalise, toText } from "../../_lib/mailrender";
+import { getWelcome, NOT_WELCOMED, renderWelcome, saveWelcome, sendWelcomes, WELCOME_DEFAULT, WELCOME_ID } from "../../_lib/welcome";
 
 // The admin's email designer and sender.
 //   GET            what's connected, the saved designs, past mailings and uploaded pictures
 //   GET ?design=ID one design, with the editor's project
 //   POST {action}  save | delete | duplicate | image | preview | test | create | send
+//                  welcome-save | welcome-test | welcome-catchup   (the automatic welcome email)
 // Sending goes in small batches, one request each, so a big list never hits Cloudflare's per-request
 // limits; the admin page keeps asking for the next batch until everyone has it, and a daily limit just
 // pauses the mailing until "Continue sending" is pressed.
@@ -55,14 +57,13 @@ export const onRequestGet: PagesFunction<Env, string, Data> = async ({ request, 
   if (!env.DB) return json({ ok: false, message: "The mailing list database isn't connected yet." }, 503);
   const db = env.DB;
   await ensureList(db);
-  await db.prepare("CREATE TABLE IF NOT EXISTS mail_config (key TEXT PRIMARY KEY, value TEXT)").run();
   const url = new URL(request.url);
   const one = url.searchParams.get("design");
   if (one) {
     const d = await db.prepare("SELECT id, name, subject, preheader, project, html, updated_at FROM mail_designs WHERE id = ?").bind(one).first();
     return d ? json({ ok: true, design: d }) : json({ ok: false, message: "That email isn't there any more." }, 404);
   }
-  const [designs, mailings, images, count, st] = await Promise.all([
+  const [designs, mailings, images, count, st, welcome, welcomeCounts, welcomeProblem] = await Promise.all([
     db.prepare("SELECT id, name, subject, updated_at FROM mail_designs ORDER BY updated_at DESC").all(),
     db.prepare(`SELECT m.id, m.name, m.subject, m.created_at,
         (SELECT COUNT(*) FROM sends s WHERE s.campaign_id = m.id AND s.error IS NULL) AS sent,
@@ -72,15 +73,37 @@ export const onRequestGet: PagesFunction<Env, string, Data> = async ({ request, 
     db.prepare("SELECT id, type, w, h FROM mail_images ORDER BY created_at DESC LIMIT 80").all<{ id: string; type: string; w: number; h: number }>(),
     db.prepare(`SELECT COUNT(*) AS n FROM subscribers WHERE ${ON_LIST}`).first<{ n: number }>(),
     status(env, url.origin),
+    getWelcome(db),
+    db.prepare(`SELECT (SELECT COUNT(*) FROM sends WHERE campaign_id = '${WELCOME_ID}' AND error IS NULL) AS sent, (SELECT COUNT(*) FROM subscribers WHERE ${NOT_WELCOMED}) AS waiting`).first<{ sent: number; waiting: number }>(),
+    db.prepare("SELECT value FROM mail_config WHERE key = 'welcome_problem'").first<{ value: string }>(),
   ]);
   return json({
     ok: true, status: st, sender: sender(), onList: count?.n ?? 0, designs: designs.results, mailings: mailings.results,
     images: images.results.map((i) => ({ src: `${url.origin}/mi/${i.id}.${i.type}`, width: i.w, height: i.h })),
+    welcome: { ...welcome, defaults: WELCOME_DEFAULT, sent: welcomeCounts?.sent ?? 0, waiting: welcomeCounts?.waiting ?? 0, problem: welcomeProblem ? JSON.parse(welcomeProblem.value) : null },
   });
 };
 
-type Body = { action?: string; id?: string; name?: string; subject?: string; preheader?: string; project?: string; html?: string; to?: string; type?: string; data?: string; w?: number; h?: number };
+type Body = { action?: string; id?: string; name?: string; subject?: string; preheader?: string; project?: string; html?: string; to?: string; type?: string; data?: string; w?: number; h?: number; on?: boolean; body?: string };
 const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+const cleanBody = (v: unknown) => String(v ?? "").replace(/\r\n?/g, "\n").trim().slice(0, 5000);
+
+/** Sends one test email. Resend lends a test sender (onboarding@resend.dev) that delivers only to the account
+ *  owner's own inbox; it's used when there's no sending address yet, or the address's domain isn't verified. */
+async function testSend(env: Env, p: Provider, msg: Msg): Promise<Response> {
+  const noSender = !!senderProblem();
+  if (noSender && p !== "resend") return json({ ok: false, message: senderProblem() }, 400);
+  let viaTester = noSender;
+  let [r] = await sendMany(env, [msg], noSender ? "onboarding@resend.dev" : undefined);
+  if (!r.ok && !noSender && p === "resend" && /domain|verif|not allowed|own email/i.test(r.message)) { [r] = await sendMany(env, [msg], "onboarding@resend.dev"); viaTester = r.ok; }
+  if (r.ok) return json({ ok: true, message: `Test sent to ${msg.to}${viaTester ? ", from Resend's test address" : ""}. "${SAMPLE}" stands in for each fan's first name.` });
+  const hint = p === "resend" && /testing emails|own email|verif|domain/i.test(r.message) ? " Until a sending domain is verified in Resend, tests can only go to the email address you signed up to Resend with." : "";
+  return json({ ok: false, message: `${r.message}${hint}` }, 502);
+}
+const testAddress = (b: Body, fallback: string) => {
+  const to = clean(b.to || fallback, 254).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) ? to : null;
+};
 
 export const onRequestPost: PagesFunction<Env, string, Data> = async ({ request, env, data }) => {
   if (!env.DB) return json({ ok: false, message: "The mailing list database isn't connected yet." }, 503);
@@ -121,6 +144,15 @@ export const onRequestPost: PagesFunction<Env, string, Data> = async ({ request,
     return json({ ok: true, src: `${origin}/mi/${id}.${type}`, width: b.w ?? 0, height: b.h ?? 0 });
   }
 
+  // saving works with no email service connected, so it comes before that check
+  if (b.action === "welcome-save") {
+    const subject = clean(b.subject, 150), body = cleanBody(b.body);
+    if (!subject) return json({ ok: false, message: "Add a subject line first." }, 400);
+    if (body.length < 2) return json({ ok: false, message: "The email is empty. Write something first." }, 400);
+    await saveWelcome(db, { on: !!b.on, subject, body });
+    return json({ ok: true });
+  }
+
   const draft = () => {
     const subject = clean(b.subject, 150), html = String(b.html ?? ""), preheader = clean(b.preheader, 200);
     if (!subject) return "Add a subject line first.";
@@ -137,20 +169,32 @@ export const onRequestPost: PagesFunction<Env, string, Data> = async ({ request,
 
   if (b.action === "test") {
     const d = draft(); if (typeof d === "string") return json({ ok: false, message: d }, 400);
-    const to = clean(b.to || data.email, 254).toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return json({ ok: false, message: "That test address doesn't look right." }, 400);
+    const to = testAddress(b, data.email);
+    if (!to) return json({ ok: false, message: "That test address doesn't look right." }, 400);
     const html = personalise(d.html, { name: SAMPLE, unsubUrl: `${origin}/unsubscribe/`, preheader: d.preheader });
-    const msg: Msg = { to, subject: `[Test] ${fillSubject(d.subject, SAMPLE)}`, html, text: toText(html) };
-    // Resend lends a test sender (onboarding@resend.dev) that delivers only to the account owner's own inbox.
-    // It's used when there's no sending address yet, or the address's domain isn't verified.
-    const noSender = !!senderProblem();
-    if (noSender && p !== "resend") return json({ ok: false, message: senderProblem() }, 400);
-    let viaTester = noSender;
-    let [r] = await sendMany(env, [msg], noSender ? "onboarding@resend.dev" : undefined);
-    if (!r.ok && !noSender && p === "resend" && /domain|verif|not allowed|own email/i.test(r.message)) { [r] = await sendMany(env, [msg], "onboarding@resend.dev"); viaTester = r.ok; }
-    if (r.ok) return json({ ok: true, message: `Test sent to ${to}${viaTester ? ", from Resend's test address" : ""}. "${SAMPLE}" stands in for each fan's first name.` });
-    const hint = p === "resend" && /testing emails|own email|verif|domain/i.test(r.message) ? " Until a sending domain is verified in Resend, tests can only go to the email address you signed up to Resend with." : "";
-    return json({ ok: false, message: `${r.message}${hint}` }, 502);
+    return testSend(env, p, { to, subject: `[Test] ${fillSubject(d.subject, SAMPLE)}`, html, text: toText(html) });
+  }
+
+  if (b.action === "welcome-test") {
+    const subject = clean(b.subject, 150), body = cleanBody(b.body);
+    if (!subject) return json({ ok: false, message: "Add a subject line first." }, 400);
+    if (body.length < 2) return json({ ok: false, message: "The email is empty. Write something first." }, 400);
+    const to = testAddress(b, data.email);
+    if (!to) return json({ ok: false, message: "That test address doesn't look right." }, 400);
+    const w = renderWelcome({ subject, body }, { name: SAMPLE, unsubUrl: `${origin}/unsubscribe/` });
+    return testSend(env, p, { to, subject: `[Test] ${w.subject}`, html: w.html, text: w.text });
+  }
+
+  // the welcome email for fans who haven't had it, a batch per request like a mailing
+  if (b.action === "welcome-catchup") {
+    const { results: fans } = await db.prepare(`SELECT email, name, token FROM subscribers WHERE ${NOT_WELCOMED} ORDER BY created_at LIMIT ${BATCH[p]}`)
+      .all<{ email: string; name: string | null; token: string | null }>();
+    const tokens: D1PreparedStatement[] = [];
+    for (const f of fans) if (!f.token) { f.token = newToken(); tokens.push(db.prepare("UPDATE subscribers SET token = ? WHERE email = ?").bind(f.token, f.email)); }
+    if (tokens.length) await db.batch(tokens);
+    const r = await sendWelcomes(env, origin, fans.map((f) => ({ email: f.email, name: f.name, token: f.token! })), await getWelcome(db));
+    const left = await db.prepare(`SELECT COUNT(*) AS n FROM subscribers WHERE ${NOT_WELCOMED}`).first<{ n: number }>();
+    return json({ ok: true, ...r, remaining: left?.n ?? 0 });
   }
 
   if (b.action === "create") {
