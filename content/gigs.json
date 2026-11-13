@@ -1,5 +1,15 @@
 [
   {
+    "id": "8b8c2e6c-c0fb-4bde-8664-656b0b331640",
+    "date": "2026-11-29",
+    "venue": "Dingle",
+    "city": "Dublin",
+    "url": "https://www.eventbrite.ie/e/other-voices-jameson-music-trail-2026-tickets-2003414116553",
+    "poster": "/media/uploads/2026-11/938e735f-587c-4dfe-afd2-82356275853d.webp",
+    "soldOut": false,
+    "published": true
+  },
+  {
     "id": "1ac935ea-354b-481d-93b3-1b9dd49894c8",
     "date": "2026-10-23",
     "venue": "The Back Page",
